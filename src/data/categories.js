@@ -1,0 +1,91 @@
+import { browServices, lashServices, makeupServices, microBrows } from './services';
+import { courses } from './courses';
+
+// Cada categoría aparece como presentación en la portada y tiene su propia página en #id.
+export const categories = [
+  {
+    id: 'pestanas',
+    eyebrow: 'Extensiones de pestañas',
+    title: 'Tu mirada, a tu medida',
+    titleAccent: 'a tu medida',
+    tint: 'paper',
+    intro:
+      'Desde un look natural hasta volumen y efectos de alto impacto. Cada técnica tiene su precio y su propio mensaje para agendar.',
+    image: '/images/services/clasica-1x1.jpg',
+    imageAlt: 'Extensiones de pestañas hechas por Grecia Cepeda',
+    buttonLabel: 'Ver tipos de pestañas',
+    pageTitle: 'Tipos de pestañas',
+    pageDescription: 'Elige la técnica que mejor se adapte a tu mirada. Los precios son en euros.',
+    groups: [{ title: 'Extensiones de pestañas', items: lashServices }],
+  },
+  {
+    id: 'cejas',
+    eyebrow: 'Cejas',
+    title: 'Cejas ordenadas, con técnica',
+    titleAccent: 'con técnica',
+    tint: 'warm',
+    intro: 'Diseño, laminado y tratamientos para cejas que se ven naturales y bien definidas.',
+    image: '/images/services/brows-lamination.jpg',
+    imageAlt: 'Laminado de cejas hecho por Grecia Cepeda',
+    buttonLabel: 'Ver servicios de cejas',
+    pageTitle: 'Servicios de cejas',
+    pageDescription: 'Diseño, laminados y tratamientos para cejas. Los precios son en euros.',
+    groups: [{ title: 'Cejas y laminados', items: browServices }],
+  },
+  {
+    id: 'micro-brows',
+    eyebrow: 'Micro brows',
+    title: 'Sombreado suave, sin líneas marcadas',
+    titleAccent: 'sin líneas marcadas',
+    tint: 'cool',
+    intro:
+      'Micropigmentación semipermanente con dermógrafo que da un acabado similar al maquillaje en sombra o polvo.',
+    image: '/images/micro-brows.jpg',
+    imageAlt: 'Micro brows hechas por Grecia Cepeda',
+    buttonLabel: 'Ver micro brows',
+    pageTitle: 'Micro brows',
+    pageDescription: 'Micropigmentación semipermanente. Los precios son en euros.',
+    groups: [{ title: 'Micro brows', items: microBrows }],
+  },
+  {
+    id: 'maquillaje',
+    eyebrow: 'Maquillaje',
+    title: 'Un maquillaje para cada ocasión',
+    titleAccent: 'para cada ocasión',
+    tint: 'ink',
+    intro: 'Social, soft, novias y prueba de maquillaje, con asesoría de look en cada servicio.',
+    image: '/images/makeup/social.jpg',
+    imageAlt: 'Maquillaje social hecho por Grecia Cepeda',
+    buttonLabel: 'Ver tipos de maquillaje',
+    pageTitle: 'Tipos de maquillaje',
+    pageDescription: 'Elige el maquillaje para tu ocasión. Consulta disponibilidad por WhatsApp.',
+    withTerms: true,
+    groups: [{ title: 'Maquillaje', items: makeupServices }],
+  },
+  {
+    id: 'cursos',
+    eyebrow: 'Formación',
+    title: 'Aprende el oficio con bases sólidas',
+    titleAccent: 'bases sólidas',
+    tint: 'cool',
+    intro: 'Cursos teórico-prácticos con modelo real, kit de inicio, certificado impreso y guía práctica.',
+    image: null, // Pendiente: foto de Grecia. Poner la ruta aquí cuando esté lista, por ejemplo '/images/cursos.jpg'.
+    imageAlt: 'Cursos de Grecia Cepeda',
+    buttonLabel: 'Ver cursos',
+    pageTitle: 'Cursos',
+    pageDescription: 'Formación práctica con modelo real. Los precios son en euros.',
+    groups: [
+      {
+        title: 'Cursos',
+        items: courses.map((course) => ({
+          id: course.id,
+          name: course.name,
+          price: course.price,
+          description: course.description,
+          notes: [course.duration, ...course.includes],
+          message: course.message,
+        })),
+      },
+    ],
+  },
+];

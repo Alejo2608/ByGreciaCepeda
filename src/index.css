@@ -1,0 +1,37 @@
+﻿@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-paper font-sans text-ink antialiased;
+}
+
+/* Botón con relleno que se desliza al pasar el cursor. */
+@layer components {
+  .btn-fill {
+    @apply relative isolate inline-block overflow-hidden rounded-full border border-ink px-8 py-3 text-center text-sm uppercase tracking-widest text-ink transition-colors duration-500;
+  }
+  .btn-fill::before {
+    content: '';
+    @apply absolute inset-0 -z-10 origin-left scale-x-0 bg-ink transition-transform duration-500 ease-out;
+  }
+  .btn-fill:hover,
+  .btn-fill:focus-visible {
+    @apply text-paper;
+  }
+  .btn-fill:hover::before,
+  .btn-fill:focus-visible::before {
+    @apply scale-x-100;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-fill,
+  .btn-fill::before {
+    transition: none;
+  }
+}
