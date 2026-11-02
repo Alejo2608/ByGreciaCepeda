@@ -11,8 +11,7 @@ export default function CategoryPage({ category }) {
         <div className="mt-10 text-center">
           <p className="text-xs uppercase tracking-[0.35em] text-accent">{category.eyebrow}</p>
           <h1 className="mt-3 font-serif text-4xl md:text-5xl">{category.pageTitle}</h1>
-          <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-ink/75">{category.pageDescription}</p>
-        </div>
+          <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-ink/75">{category.pageDescription}</p>        </div>
 
         {category.groups.map((group) => (
           <div key={group.title}>
@@ -21,7 +20,15 @@ export default function CategoryPage({ category }) {
             )}
             <div className={`grid gap-6 sm:grid-cols-2 lg:grid-cols-3 ${category.groups.length > 1 ? '' : 'mt-16'}`}>
               {group.items.map((service) => (
-                <ServiceCard key={service.id} {...service} withTerms={category.withTerms} />
+                <ServiceCard
+                  key={service.id}
+                  {...service}
+                  withTerms={category.withTerms}
+                  withDiscount={category.discount}
+                  withForm={category.withForm}
+                  allowSunday={category.allowSunday}
+                  imageClass={category.imageClass}
+                />
               ))}
             </div>
           </div>

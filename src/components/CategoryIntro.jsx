@@ -75,13 +75,6 @@ export default function CategoryIntro({ category, index }) {
               />
             )}
           </div>
-          <span
-            className={`absolute -left-3 -top-3 flex h-14 w-14 items-center justify-center rounded-full font-serif text-lg shadow-lg ${
-              dark ? 'bg-paper text-ink' : 'bg-ink text-paper'
-            }`}
-          >
-            {String(index + 1).padStart(2, '0')}
-          </span>
         </div>
 
         <div className={`text-center md:text-left ${reversed ? 'md:order-1' : ''}`}>
@@ -106,7 +99,7 @@ export default function CategoryIntro({ category, index }) {
             href={`#${category.id}`}
             className={
               dark
-                ? 'btn-fill mt-10 border-paper text-paper before:bg-paper hover:text-ink'
+                ? 'btn-fill mt-10 border-paper text-paper hover:bg-paper hover:text-ink'
                 : 'btn-fill mt-10'
             }
           >

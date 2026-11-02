@@ -1,0 +1,52 @@
+rules_version = '2';
+
+// Reglas de Cloud Firestore. Pégalas en Firebase Console → Firestore Database → Reglas.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Solo la cuenta de Google de Grecia puede administrar las citas.
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.token.email == 'greece20cepeda@gmail.com'
+        && request.auth.token.email_verified == true;
+    }
+
+    // Revisa que la solicitud tenga datos razonables. Se deja un día de margen por la diferencia de zona horaria.
+    function solicitudValida(data) {
+      let partes = data.fecha.split('-');
+      let fecha = timestamp.date(int(partes[0]), int(partes[1]), int(partes[2]));
+      return data.fecha.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+        && fecha >= request.time.date() - duration.value(1, 'd')
+        && fecha <= request.time.date() + duration.value(22, 'd')
+        && !data.fecha.matches('^[0-9]{4}-(12-25|01-01|01-02)$')
+        && (data.preferencias != null || !data.fecha.matches('^[0-9]{4}-12-(24|31)$'))
+        && data.hora.matches('^([01][0-9]|2[0-3]):[0-5][0-9]$')
+        && data.nombre is string
+        && data.nombre.size() >= 2 && data.nombre.size() <= 60
+        && data.telefono.matches('^[0-9+ ()-]{7,20}$');
+    }
+
+    // Turnos de 30 minutos. Cualquiera ve los horarios ocupados; cada turno se crea una sola vez.
+    match /slots/{slotId} {
+      allow read: if true;
+      allow create: if isAdmin() || (
+        !exists(/databases/$(database)/documents/slots/$(slotId))
+        && request.resource.data.keys().hasOnly(['fecha', 'hora', 'reservaId'])
+      );
+      allow update, delete: if isAdmin();
+    }
+
+    // Solicitudes y citas. Los datos de las clientas solo los ve Grecia.
+    match /reservas/{reservaId} {
+      allow create: if isAdmin() || (
+        request.resource.data.estado == 'pendiente'
+        && request.resource.data.keys().hasOnly([
+          'servicio', 'precio', 'duracion', 'fecha', 'hora', 'nombre', 'telefono',
+          'instagram', 'preferencias', 'datos', 'estado', 'slots', 'creado'
+        ])
+        && solicitudValida(request.resource.data)
+      );
+      allow read, update, delete: if isAdmin();
+    }
+  }
+}

@@ -4,9 +4,8 @@ import { buildWhatsAppLink } from '../lib/whatsapp';
 
 const links = [
   { href: '#sobre-mi', label: 'Sobre mí' },
-  { href: '#pestanas', label: 'Pestañas' },
   { href: '#servicios', label: 'Servicios' },
-  { href: '#cursos', label: 'Cursos' },
+  { href: '#redes', label: 'Redes' },
 ];
 
 export default function Navbar() {

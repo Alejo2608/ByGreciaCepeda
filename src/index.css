@@ -14,24 +14,30 @@ body {
 @layer components {
   .btn-fill {
     @apply relative isolate inline-block overflow-hidden rounded-full border border-ink px-8 py-3 text-center text-sm uppercase tracking-widest text-ink transition-colors duration-500;
+    /* Al mantener presionado en celular no se selecciona el texto ni se marca el toque, así el relleno no se corta. */
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    user-select: none;
   }
-  .btn-fill::before {
-    content: '';
-    @apply absolute inset-0 -z-10 origin-left scale-x-0 bg-ink transition-transform duration-500 ease-out;
+  /* El relleno por cursor solo aplica en equipos con mouse; en celular el hover
+     se queda pegado después de tocar y el botón se veía lleno sin estar seleccionado. */
+  @media (hover: hover) {
+    .btn-fill:hover {
+      @apply bg-ink text-paper;
+    }
   }
-  .btn-fill:hover,
-  .btn-fill:focus-visible {
-    @apply text-paper;
+  .btn-fill:focus-visible,
+  .btn-fill:active {
+    @apply bg-ink text-paper;
   }
-  .btn-fill:hover::before,
-  .btn-fill:focus-visible::before {
-    @apply scale-x-100;
+  /* Al tocar en celular, el botón responde con una leve reducción de tamaño. */
+  .btn-fill:active {
+    @apply scale-[0.98];
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .btn-fill,
-  .btn-fill::before {
+  .btn-fill {
     transition: none;
   }
 }

@@ -3,7 +3,8 @@ import { createPortal } from 'react-dom';
 import { terms } from '../data/terms';
 
 // Se renderiza en el body para que no lo afecten las transformaciones de las tarjetas.
-export default function TermsDialog({ open, onClose }) {
+// Si recibe onAccept, muestra el botón para aceptar antes de agendar.
+export default function TermsDialog({ open, onClose, onAccept }) {
   useEffect(() => {
     if (!open) return;
     const onKey = (e) => e.key === 'Escape' && onClose();
@@ -14,10 +15,7 @@ export default function TermsDialog({ open, onClose }) {
   if (!open) return null;
 
   return createPortal(
-    <div
-      className="fixed inset-0 z-[60] flex items-center justify-center bg-ink/60 p-4"
-      onClick={onClose}
-    >
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-ink/60 p-4" onClick={onClose}>
       <div
         role="dialog"
         aria-modal="true"
@@ -46,6 +44,19 @@ export default function TermsDialog({ open, onClose }) {
             </li>
           ))}
         </ul>
+
+        {onAccept && (
+          <button
+            type="button"
+            onClick={() => {
+              onAccept();
+              onClose();
+            }}
+            className="btn-fill mt-8 w-full"
+          >
+            Aceptar y agendar
+          </button>
+        )}
       </div>
     </div>,
     document.body,

@@ -8,5 +8,8 @@ export const site = {
     { label: '@grecemakeup', url: 'https://www.instagram.com/grecemakeup/' },
   ],
   city: 'Trujillo, Venezuela',
+  address: ['Trujillo capital', 'C.C. Macarena, piso 2, local 07', '(peluquería de Lorena)'],
+  // Búsqueda en Google Maps del centro comercial.
+  mapsUrl: 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent('Macarenas La Pequeña Italia, Trujillo, Venezuela'),
   email: 'greece20cepeda@gmail.com',
 };
