@@ -129,12 +129,12 @@ export const browServices = [
   {
     id: 'lash-lifting',
     name: 'Lash lifting',
-    price: '20 USD',
+    price: '25 USD',
     duration: '1 hora',
     image: '/images/services/lash-lifting.jpg',
     description:
       'Tratamiento premium X MaxyMova que nutre tus pestañas después de los procedimientos permanentes. Incluye tinturado.',
-    message: 'Hola Grecia, me interesa el lash lifting (20 USD). ¿Me compartes disponibilidad?',
+    message: 'Hola Grecia, me interesa el lash lifting (25 USD). ¿Me compartes disponibilidad?',
   },
   {
     id: 'brows-lamination',

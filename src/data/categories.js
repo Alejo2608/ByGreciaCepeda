@@ -21,8 +21,8 @@ export const categories = [
   {
     id: 'pestanas',
     eyebrow: 'Extensiones de pestañas',
-    title: 'Tu mirada, a tu medida',
-    titleAccent: 'a tu medida',
+    title: 'Extensiones y diseño de pestañas',
+    titleAccent: 'diseño de pestañas',
     tint: 'paper',
     intro:
       'Desde un look natural hasta volumen y efectos de alto impacto. Cada técnica tiene su precio y su propio mensaje para agendar.',
@@ -37,8 +37,8 @@ export const categories = [
   {
     id: 'cejas',
     eyebrow: 'Cejas',
-    title: 'Cejas ordenadas, con técnica',
-    titleAccent: 'con técnica',
+    title: 'Definición y expresión',
+    titleAccent: 'expresión',
     tint: 'warm',
     intro: 'Diseño, laminado y tratamientos para cejas que se ven naturales y bien definidas.',
     image: '/images/services/brows-lamination.jpg',
@@ -52,8 +52,8 @@ export const categories = [
   {
     id: 'cursos',
     eyebrow: 'Formación',
-    title: 'Aprende el oficio con bases sólidas',
-    titleAccent: 'bases sólidas',
+    title: 'Academia, formación profesional',
+    titleAccent: 'formación profesional',
     tint: 'ink',
     intro: 'Cursos teórico-prácticos con modelo real, kit de inicio, certificado impreso y guía práctica.',
     image: '/images/cursos.jpg',

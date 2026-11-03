@@ -18,6 +18,7 @@ import {
   slotIdsFor,
   todayISO,
 } from '../lib/schedule';
+
 import Calendar from './Calendar';
 
 const questions = [
@@ -46,7 +47,8 @@ export default function BookingDialog({ open, onClose, service, preferences = fa
   const [nombre, setNombre] = useState('');
   const [fecha, setFecha] = useState('');
   const [hora, setHora] = useState('');
-  const [busy, setBusy] = useState(new Set());
+  // Turnos ocupados del día elegido. Se guardan con su fecha para no usar los de otro día.
+  const [slots, setSlots] = useState({ fecha: '', ids: new Set(), error: false });
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [error, setError] = useState('');
@@ -65,39 +67,52 @@ export default function BookingDialog({ open, onClose, service, preferences = fa
     return () => window.removeEventListener('keydown', onKey);
   }, [open, onClose]);
 
+  // Turnos ocupados de las próximas 3 semanas, para desactivar en el calendario los días sin horarios.
+  const [rango, setRango] = useState(new Set());
+  useEffect(() => {
+    if (!open) return undefined;
+    let cancelled = false;
+    getDocs(query(collection(db, 'slots'), where('fecha', '>=', todayISO()), where('fecha', '<=', maxBookingISO())))
+      .then((snap) => {
+        if (!cancelled) setRango(new Set(snap.docs.map((d) => d.id)));
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [open]);
+
   // Turnos ya ocupados o apartados de la fecha elegida (y de los días siguientes, si es un curso).
   useEffect(() => {
-    if (!fecha || !isBookableDay(fecha, { makeup: preferences, sunday: allowSunday })) {
-      setBusy(new Set());
-      return undefined;
-    }
+    if (!fecha || !isBookableDay(fecha, { makeup: preferences, sunday: allowSunday })) return undefined;
     const dias = bloque ? Array.from({ length: bloque.dias }, (_, i) => addDays(fecha, i)) : [fecha];
     let cancelled = false;
-    setLoading(true);
     getDocs(query(collection(db, 'slots'), where('fecha', 'in', dias)))
       .then((snap) => {
-        if (!cancelled) setBusy(new Set(snap.docs.map((d) => d.id)));
+        if (!cancelled) setSlots({ fecha, ids: new Set(snap.docs.map((d) => d.id)), error: false });
       })
       .catch(() => {
-        if (!cancelled) setError('No pudimos cargar los horarios. Intenta de nuevo.');
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) setSlots({ fecha, ids: new Set(), error: true });
       });
     return () => {
       cancelled = true;
     };
   }, [fecha, bloque, preferences, allowSunday]);
 
-  const availableTimes = useMemo(() => {
-    if (!fecha || !isBookableDay(fecha, { makeup: preferences, sunday: allowSunday })) return [];
+  // Mientras llegan los horarios del día elegido no se muestra ninguna hora.
+  const cargando = Boolean(fecha) && openDay(fecha) && slots.fecha !== fecha;
+  const errorCarga = slots.fecha === fecha && slots.error;
+  const busy = slots.fecha === fecha ? slots.ids : new Set();
+
+  // Horas que todavía se pueden reservar en un día, dados los turnos ocupados de ese día.
+  const horasDelDia = (f, ocupados) => {
+    if (!f || !openDay(f)) return [];
     const now = new Date();
-    const isToday = fecha === todayISO();
+    const isToday = f === todayISO();
     const nowHHMM = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
     if (bloque) {
       const libre =
-        diasDelCurso(fecha).every((d) => isBookableDay(d, { makeup: preferences, sunday: allowSunday })) &&
-        bloqueSlotIds(fecha, bloque).every((id) => !busy.has(id));
+        diasDelCurso(f).every((d) => openDay(d)) && bloqueSlotIds(f, bloque).every((id) => !ocupados.has(id));
       return libre && (!isToday || bloque.inicio > nowHHMM) ? [bloque.inicio] : [];
     }
     return dayTimes(preferences).filter(
@@ -105,9 +120,11 @@ export default function BookingDialog({ open, onClose, service, preferences = fa
         !isBreakTime(h) &&
         fitsInDay(h, minutes, preferences) &&
         (!isToday || h > nowHHMM) &&
-        slotIdsFor(fecha, h, minutes).every((id) => !busy.has(id)),
+        slotIdsFor(f, h, minutes).every((id) => !ocupados.has(id)),
     );
-  }, [fecha, busy, minutes, bloque, preferences, allowSunday]);
+  };
+
+  const availableTimes = slots.fecha === fecha ? horasDelDia(fecha, busy) : [];
 
   // Para los cursos la hora es siempre la de inicio de la franja.
   const selected = bloque ? (availableTimes[0] ?? '') : hora;
@@ -264,7 +281,9 @@ export default function BookingDialog({ open, onClose, service, preferences = fa
                     setFecha(d);
                     setHora('');
                   }}
-                  isDisabled={(d) => d < todayISO() || d > maxBookingISO() || !openDay(d)}
+                  isDisabled={(d) =>
+                    d < todayISO() || d > maxBookingISO() || !openDay(d) || horasDelDia(d, rango).length === 0
+                  }
                 />
               </div>
               <p className="mt-2 text-xs text-accent">Puedes agendar hasta 3 semanas desde hoy.</p>
@@ -276,8 +295,9 @@ export default function BookingDialog({ open, onClose, service, preferences = fa
             {fecha && openDay(fecha) && (
               <fieldset>
                 <legend className="text-sm">{bloque ? 'Horario del curso' : 'Hora disponible'}</legend>
-                {loading && <p className="mt-2 text-sm text-accent">Cargando horarios…</p>}
-                {!loading && availableTimes.length === 0 && (
+                {cargando && <p className="mt-2 text-sm text-accent">Cargando horarios…</p>}
+                {errorCarga && <p className="mt-2 text-sm text-accent">No pudimos cargar los horarios. Intenta de nuevo.</p>}
+                {!cargando && !errorCarga && availableTimes.length === 0 && (
                   <p className="mt-2 text-sm text-accent">
                     {bloque ? 'Ese día ya está ocupado para el curso.' : 'No hay horarios disponibles para esa fecha.'}
                   </p>
