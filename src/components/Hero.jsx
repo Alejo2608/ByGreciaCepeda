@@ -24,7 +24,7 @@ export default function Hero() {
       id="inicio"
       onPointerMove={mover}
       onPointerLeave={quieto}
-      className="relative flex min-h-screen items-center overflow-hidden bg-gradient-to-br from-paper via-mist/40 to-paper pb-24 pt-28 md:pb-0 md:pt-24"
+      className="relative flex min-h-screen items-center overflow-hidden bg-gradient-to-br from-paper via-mist/40 to-paper pb-24 pt-28 md:min-h-0 md:landscape:min-h-screen md:pb-20 md:pt-28 lg:pb-0 lg:pt-24"
     >
       <div className="mx-auto grid w-full max-w-6xl items-center gap-12 px-4 md:grid-cols-2 md:px-6">
         <div className="relative z-10 text-center md:text-left">
