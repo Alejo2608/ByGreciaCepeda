@@ -57,7 +57,7 @@ function Estadistica({ valor, sufijo, etiqueta }) {
 
 export default function About() {
   return (
-    <section id="sobre-mi" className="mx-auto max-w-6xl px-4 py-24 md:px-6">
+    <section id="sobre-mi" className="mx-auto max-w-6xl px-4 py-24 md:px-6 md:pt-16 lg:pt-24">
       <div className="grid items-center gap-14 md:grid-cols-[1.3fr_1fr] md:gap-20">
         <div className="text-center md:text-left">
           <p className="text-xs uppercase tracking-[0.35em] text-accent">Sobre mí</p>
