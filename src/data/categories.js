@@ -14,7 +14,7 @@ export const categories = [
     imageAlt: 'Maquillaje social hecho por Grecia Cepeda',
     buttonLabel: 'Ver tipos de maquillaje',
     pageTitle: 'Tipos de maquillaje',
-    pageDescription: 'Elige el maquillaje para tu ocasión. Consulta disponibilidad por WhatsApp.',
+    pageDescription: 'Elige el maquillaje para tu ocasión.',
     withForm: true,
     groups: [{ title: 'Maquillaje', items: makeupServices }],
   },
