@@ -178,6 +178,7 @@ export const makeupServices = [
   {
     id: 'social',
     name: 'Social Makeup',
+    destacado: true,
     ideal: 'Tus noches especiales: cumpleaños, graduaciones, cenas o cualquier evento social.',
     price: '40 USD',
     duration: '1 hora y 30 minutos',
