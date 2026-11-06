@@ -9,7 +9,8 @@ import {
   bloqueSlotIds,
   dayTimes,
   durationMinutes,
-  fitsInDay,
+  enHorario,
+  esDomingoDeDiciembre,
   formatFecha,
   formatHour,
   isBookableDay,
@@ -112,13 +113,15 @@ export default function BookingDialog({ open, onClose, service, preferences = fa
     const nowHHMM = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
     if (bloque) {
       const libre =
-        diasDelCurso(f).every((d) => openDay(d)) && bloqueSlotIds(f, bloque).every((id) => !ocupados.has(id));
+        diasDelCurso(f).every((d) => openDay(d)) &&
+        !esDomingoDeDiciembre(f) &&
+        bloqueSlotIds(f, bloque).every((id) => !ocupados.has(id));
       return libre && (!isToday || bloque.inicio > nowHHMM) ? [bloque.inicio] : [];
     }
     return dayTimes(preferences).filter(
       (h) =>
         !isBreakTime(h) &&
-        fitsInDay(h, minutes, preferences) &&
+        enHorario(h, minutes, f, preferences) &&
         (!isToday || h > nowHHMM) &&
         slotIdsFor(f, h, minutes).every((id) => !ocupados.has(id)),
     );

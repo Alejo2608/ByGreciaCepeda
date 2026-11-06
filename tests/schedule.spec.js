@@ -3,6 +3,7 @@ import {
   addDays,
   bloqueSlotIds,
   dayTimes,
+  enHorario,
   fitsInDay,
   isBookableDay,
   isOpenDay,
@@ -65,6 +66,16 @@ test('los cursos de pestañas y cejas ocupan de 8:00 AM a 1:00 PM en cada día',
   expect(ids[0]).toBe('2030-03-04_08:00');
   expect(ids).toContain('2030-03-05_12:30');
   expect(ids).not.toContain('2030-03-05_13:00');
+});
+
+test('en diciembre los domingos se atiende solo en la mañana, para todos los servicios', () => {
+  // 2030-12-01 es domingo; 2030-11-03 también es domingo pero no es diciembre.
+  expect(isBookableDay('2030-12-01', {})).toBe(true);
+  expect(isBookableDay('2030-11-03', {})).toBe(false);
+  expect(enHorario('10:00', 60, '2030-12-01')).toBe(true);
+  expect(enHorario('11:30', 60, '2030-12-01')).toBe(true);
+  expect(enHorario('12:00', 60, '2030-12-01')).toBe(false);
+  expect(enHorario('14:00', 60, '2030-11-03')).toBe(true);
 });
 
 test('la clienta solo puede agendar hasta 21 días adelante', () => {

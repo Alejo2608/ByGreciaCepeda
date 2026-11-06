@@ -94,7 +94,20 @@ export function isBookableDay(fecha, { makeup = false, sunday = false } = {}) {
   const mmdd = fecha.slice(5);
   if (CLOSED_DAYS.includes(mmdd)) return false;
   if (MAKEUP_ONLY_DAYS.includes(mmdd) && !makeup) return false;
+  if (esDomingoDeDiciembre(fecha)) return true;
   return isOpenDay(fecha, makeup || sunday);
+}
+
+// En diciembre los domingos se atiende solo en la mañana.
+export function esDomingoDeDiciembre(fecha) {
+  return fecha.slice(5, 7) === '12' && new Date(`${fecha}T00:00`).getDay() === 0;
+}
+
+// La cita cabe en el horario del día. Los domingos de diciembre tiene que terminar antes del almuerzo.
+export function enHorario(hora, minutes, fecha, extended = false) {
+  if (!fitsInDay(hora, minutes, extended)) return false;
+  if (!esDomingoDeDiciembre(fecha)) return true;
+  return toMinutes(hora) + minutes <= toMinutes(BREAK_START);
 }
 
 // Fecha de hoy en formato AAAA-MM-DD, según la hora local.

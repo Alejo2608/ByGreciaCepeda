@@ -77,6 +77,7 @@ export const lashServices = [
     price: '35 USD',
     duration: '2 horas',
     image: '/images/services/ucraniano.jpg',
+    destacado: true,
     description: 'Fibras nuevas que se parecen al volumen artesanal, también llamado volumen ruso.',
     notes: ['También en color marrón'],
     message: 'Hola Grecia, me interesan las tecnológicas ucraniano (35 USD). ¿Me compartes disponibilidad?',
@@ -171,58 +172,62 @@ export const microBrows = [
     message: 'Hola Grecia, me interesa el retoque de micro brows (40 USD). ¿Me compartes disponibilidad?',
   },
 ];
-const BRIDAL = 'Asesoría de look, preparación correcta de piel y maquillaje resistente a lágrimas, duradero y adaptado a tu personalidad.';
 
 // Maquillaje según el catálogo "Makeup Servicios by Grecia". Precios en dólares (USD).
 export const makeupServices = [
   {
     id: 'social',
     name: 'Social Makeup',
+    ideal: 'Tus noches especiales: cumpleaños, graduaciones, cenas o cualquier evento social.',
     price: '40 USD',
     duration: '1 hora y 30 minutos',
     image: '/images/makeup/social.jpg',
     description:
-      'Asesoría de look, preparación correcta de piel y maquillaje resistente a lágrimas, duradero y adaptado a tu personalidad.',
+      'Un maquillaje pensado para que luzcas impecable de principio a fin: asesoría de look, piel bien preparada y un acabado resistente a lágrimas, adaptado a tu personalidad y a tu outfit.',
     message: 'Hola Grecia, me interesa el Social Makeup (40 USD). ¿Me compartes disponibilidad?',
   },
   {
     id: 'soft',
     name: 'Soft Makeup',
+    ideal: 'Celebraciones de día o salidas especiales: bautizos, cumpleaños y reuniones familiares.',
     price: '35 USD',
     duration: '1 hora y 30 minutos',
     image: '/images/makeup/soft.jpg',
     description:
-      'Realza tu belleza natural y se adapta a eventos cotidianos o celebraciones como cumpleaños y bautizos. Armoniza con tu ropa y dura varias horas.',
+      'Realza tu belleza natural con un acabado suave y luminoso que armoniza con tu ropa y se mantiene durante toda la celebración.',
     message: 'Hola Grecia, me interesa el Soft Makeup (35 USD). ¿Me compartes disponibilidad?',
   },
   {
     id: 'novias-1',
     name: 'Makeup Novias',
-    price: '50 USD',
+    ideal: 'Tu gran boda: el maquillaje que te acompaña desde el primer "sí" hasta la última foto.',
+    price: '45 USD',
     duration: '1 hora y 30 minutos',
     image: '/images/makeup/novias-1.jpg',
-    description: BRIDAL,
-    notes: ['Incluye prueba de maquillaje'],
-    message: 'Hola Grecia, me interesa el Makeup Novias (50 USD, con prueba de maquillaje). ¿Me compartes disponibilidad?',
+    description:
+      'Tu día merece un maquillaje que se vea perfecto en fotos y en persona. Asesoría de look desde el inicio, piel bien preparada y un acabado resistente a lágrimas y a la emoción.',
+    message: 'Hola Grecia, me interesa el Makeup Novias (45 USD, con prueba de maquillaje). ¿Me compartes disponibilidad?',
   },
   {
     id: 'quince',
     name: 'Makeup Quinceañeras',
+    ideal: 'Tu gran noche de quince: el maquillaje que brilla igual que tú, de la foto de entrada al último baile.',
     price: '45 USD',
     duration: '1 hora y 30 minutos',
     image: '/images/makeup/quince.jpg',
     description:
-      'Asesoría de look, preparación correcta de piel y maquillaje resistente a lágrimas, duradero y adaptado a tu personalidad para tu gran noche de quince años.',
+      'Tu noche de quince merece brillar. Te acompañamos con asesoría de look, piel bien preparada y un maquillaje duradero que se adapta a tu personalidad y a tu vestido.',
     message: 'Hola Grecia, me interesa el maquillaje para quinceañeras (45 USD). ¿Me compartes disponibilidad?',
   },
   {
     id: 'prueba',
     name: 'Prueba de maquillaje',
+    ideal: 'Elegir tu look antes del gran día, sin sorpresas.',
     price: '30 USD',
     duration: '1 hora y 30 minutos',
     image: '/images/makeup/prueba.jpg',
     description:
-      'Maquillaje social de prueba para evaluar el estilo que quieres para tu evento especial, antes del gran día.',
+      'Pruébalo con tiempo: un maquillaje social de prueba para ver el estilo que quieres y ajustar lo que te guste antes de tu evento.',
     message: 'Hola Grecia, me interesa la prueba de maquillaje (30 USD). ¿Me compartes disponibilidad?',
   },
 ];

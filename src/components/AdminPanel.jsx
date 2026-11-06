@@ -19,7 +19,7 @@ import {
   BREAK_START,
   dayTimes,
   durationMinutes,
-  fitsInDay,
+  enHorario,
   formatFecha,
   formatHour,
   isBreakTime,
@@ -30,6 +30,7 @@ import {
 import Calendar from './Calendar';
 import ConfirmDialog from './ConfirmDialog';
 import AdminModal from './AdminModal';
+import AgendarClienta from './AgendarClienta';
 
 // Servicios que se pueden elegir al editar una cita.
 const catalogo = [
@@ -89,7 +90,7 @@ function RescheduleBox({ reserva, onDone, onCancel }) {
       ? dayTimes(extended).filter(
           (h) =>
             !isBreakTime(h) &&
-            fitsInDay(h, minutes, extended) &&
+            enHorario(h, minutes, fecha, extended) &&
             (fecha !== todayISO() || h > nowHHMM) &&
             slotIdsFor(fecha, h, minutes).every((id) => own.has(id) || !busy.has(id)),
         )
@@ -461,7 +462,16 @@ export default function AdminPanel() {
           <p className="mt-3 text-xs text-accent">Los puntos marcan los días con citas o bloqueos.</p>
 
           <div className="mt-8">
-            <p className="font-serif text-2xl capitalize">Citas del día</p>
+            <div className="flex items-center justify-between gap-3">
+              <p className="font-serif text-2xl capitalize">Citas del día</p>
+              <button
+                type="button"
+                onClick={() => setAccion({ tipo: 'agendar' })}
+                className="rounded-full border border-ink/30 px-4 py-2 text-xs uppercase tracking-widest transition hover:bg-mist"
+              >
+                Agendar clienta
+              </button>
+            </div>
             <p className="text-xs uppercase tracking-widest text-accent capitalize">{formatFecha(fecha)}</p>
             {citasDelDia.length === 0 && <p className="mt-4 text-sm text-accent">No hay citas para este día.</p>}
             <ul className="mt-4 space-y-3">
@@ -641,6 +651,12 @@ export default function AdminPanel() {
           {message && <p className="mt-4 text-sm text-accent">{message}</p>}
         </div>
       </div>
+
+      {accion?.tipo === 'agendar' && (
+        <AdminModal title="Agendar clienta" onClose={() => setAccion(null)}>
+          <AgendarClienta occupancy={occupancy} onDone={() => setAccion(null)} />
+        </AdminModal>
+      )}
 
       {accion?.tipo === 'cambiar' && (
         <AdminModal title="Cambiar hora" onClose={() => setAccion(null)}>

@@ -1,5 +1,16 @@
 import { site } from '../data/site';
 import InstagramIcon from './InstagramIcon';
+import useReveal from '../lib/useReveal';
+
+// Cada tarjeta aparece al entrar en pantalla, también al desplazarse con el dedo en celular.
+function RevealItem({ children, className }) {
+  const [ref, visible] = useReveal();
+  return (
+    <li ref={ref} className={`${className} transition duration-700 ${visible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
+      {children}
+    </li>
+  );
+}
 
 // Ícono de ubicación (pin) con el mismo trazo que el logo de Instagram.
 function MapPinIcon({ className }) {
@@ -32,15 +43,15 @@ export default function Social() {
 
       <ul className="mx-auto mt-12 flex max-w-4xl flex-col justify-center gap-6 md:flex-row">
         {site.instagram.map((account) => (
-          <li key={account.url} className="flex flex-1">
+          <RevealItem key={account.url} className="flex flex-1">
             <a href={account.url} target="_blank" rel="noopener noreferrer" className={cardClass}>
               <InstagramIcon className="h-8 w-8 transition group-hover:text-accent" />
               <span className="text-sm uppercase tracking-widest">{account.label}</span>
             </a>
-          </li>
+          </RevealItem>
         ))}
 
-        <li className="flex flex-1">
+        <RevealItem className="flex flex-1">
           <a href={site.mapsUrl} target="_blank" rel="noopener noreferrer" className={cardClass}>
             <MapPinIcon className="h-8 w-8 shrink-0 transition group-hover:text-accent" />
             <div>
@@ -54,7 +65,7 @@ export default function Social() {
               </p>
             </div>
           </a>
-        </li>
+        </RevealItem>
       </ul>
     </section>
   );
