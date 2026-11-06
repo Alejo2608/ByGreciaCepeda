@@ -8,7 +8,7 @@ export default {
         paper: '#F4F4F7',
         mist: '#ECEBED',
         ink: '#343434',
-        accent: '#6E3A4C',
+        accent: '#545454',
         // Tonos suaves para separar cada presentación, dentro de la misma familia gris.
         warm: '#F2EEEB',
         cool: '#EBEFF2',
