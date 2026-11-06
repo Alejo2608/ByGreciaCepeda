@@ -7,6 +7,8 @@ export default function Hero() {
   const [pointer, setPointer] = useState({ x: 0, y: 0 });
 
   const mover = (e) => {
+    // Solo con mouse: en celular la foto está de fondo y el movimiento se ve raro.
+    if (e.pointerType !== 'mouse') return;
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     const r = e.currentTarget.getBoundingClientRect();
     setPointer({

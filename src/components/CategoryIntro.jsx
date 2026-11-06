@@ -9,13 +9,21 @@ const tints = {
 };
 
 // Una palabra del título va en letra script, como en el catálogo.
-function Title({ text, accent }) {
+// La palabra script se escribe al entrar en pantalla: se desenfoca, se desliza y aparece después del resto del título.
+function Title({ text, accent, visible }) {
   if (!accent || !text.includes(accent)) return text;
   const [before, after] = text.split(accent);
   return (
     <>
       {before}
-      <span className="font-script text-[1.2em] font-normal">{accent}</span>
+      <span
+        className={`inline-block font-script text-[1.2em] font-normal transition duration-1000 ease-out ${
+          visible ? 'translate-x-0 opacity-100 blur-none' : 'translate-x-4 opacity-0 blur-sm'
+        }`}
+        style={{ transitionDelay: '0.5s' }}
+      >
+        {accent}
+      </span>
       {after}
     </>
   );
@@ -47,7 +55,7 @@ export default function CategoryIntro({ category, index }) {
   return (
     <div
       ref={ref}
-      className={`rounded-[2.5rem] px-6 py-14 transition-all duration-1000 ease-out motion-reduce:transition-none md:px-14 ${
+      className={`rounded-[2.5rem] px-6 py-14 transition duration-1000 ease-out motion-reduce:transition-none md:px-14 ${
         tints[category.tint] ?? tints.paper
       } ${visible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}
     >
@@ -81,8 +89,13 @@ export default function CategoryIntro({ category, index }) {
           <p className={`text-xs uppercase tracking-[0.35em] ${dark ? 'text-paper/60' : 'text-accent'}`}>
             {category.eyebrow}
           </p>
-          <h3 className={`mt-3 font-serif text-4xl leading-tight md:text-5xl ${dark ? 'text-paper' : ''}`}>
-            <Title text={category.title} accent={category.titleAccent} />
+          <h3
+            className={`mt-3 font-serif text-4xl leading-tight transition duration-1000 ease-out md:text-5xl ${
+              dark ? 'text-paper' : ''
+            } ${visible ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}`}
+            style={{ transitionDelay: '0.2s' }}
+          >
+            <Title text={category.title} accent={category.titleAccent} visible={visible} />
           </h3>
           <span
             aria-hidden="true"

@@ -91,8 +91,22 @@ export default function ServiceCard({
       )}
       <div className="flex flex-1 flex-col p-6">
         <div className="flex items-start justify-between gap-4">
-          <h4 className="font-serif text-2xl leading-snug">{name}</h4>
-          <span className="shrink-0 rounded-full border border-ink px-3 py-1 text-sm">{price}</span>
+          <h4
+            className={`font-serif text-2xl leading-snug transition duration-700 ease-out ${
+              visible ? 'translate-y-0 opacity-100' : 'translate-y-3 opacity-0'
+            }`}
+            style={{ transitionDelay: '0.15s' }}
+          >
+            {name}
+          </h4>
+          <span
+            className={`shrink-0 rounded-full border border-ink px-3 py-1 text-sm transition duration-700 ease-out ${
+              visible ? 'scale-100 opacity-100' : 'scale-90 opacity-0'
+            }`}
+            style={{ transitionDelay: '0.3s' }}
+          >
+            {price}
+          </span>
         </div>
 
         {withForm ? (
