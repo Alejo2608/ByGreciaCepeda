@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { buildWhatsAppLink } from '../lib/whatsapp';
+import { site } from '../data/site';
 
 // Al pasar el mouse o el dedo por la portada, el nombre y la foto se mueven en sentidos opuestos.
 export default function Hero() {
@@ -29,15 +30,19 @@ export default function Hero() {
             className="inline-block transition-transform duration-500 ease-out"
             style={{ transform: `translate(${pointer.x * 14}px, ${pointer.y * 8}px)` }}
           >
-            <p className="fade-up font-script text-4xl text-accent md:text-5xl">ByGreciaCepeda</p>
+            <p className="fade-up font-firma text-4xl text-accent md:text-6xl">{site.name}</p>
           </div>
           <p className="fade-up mb-4 mt-2 text-xs uppercase tracking-[0.35em] text-accent" style={{ animationDelay: '0.1s' }}>
             Lashista · Maquillaje · Cursos
           </p>
-          <h1 className="fade-up font-serif text-5xl leading-tight md:text-7xl" style={{ animationDelay: '0.2s' }}>
-            Tu mirada, <span className="italic text-accent">realzada</span> con arte
+          <h1 className="fade-up font-serif text-4xl leading-tight md:text-6xl md:leading-[0.85]" style={{ animationDelay: '0.2s' }}>
+            <span className="block leading-[0.85]">
+              Tu mirada,{' '}
+              <span className="font-script text-[1.2em] font-normal text-accent">realzada</span>
+            </span>
+            <span className="block font-script text-[1.2em] font-normal leading-[0.74]">con arte</span>
           </h1>
-          <p className="fade-up mx-auto mt-6 max-w-md text-base leading-relaxed text-ink/80 md:mx-0" style={{ animationDelay: '0.35s' }}>
+          <p className="fade-up mx-auto mt-6 max-w-md text-base leading-relaxed text-ink/80 md:mx-0 md:mt-2.5" style={{ animationDelay: '0.35s' }}>
             Extensiones de pestañas, maquillaje para cada ocasión y formación para quienes quieren
             hacer de la belleza su profesión.
           </p>

@@ -1,7 +1,7 @@
 // Datos generales del negocio. Cambia aquí el número y las redes.
 // Formato del número: código de país + número, sin + ni espacios (ej. 5215512345678).
 export const site = {
-  name: 'ByGreciaCepeda',
+  name: 'Grecia Cepeda',
   whatsappNumber: '584121750249',
   instagram: [
     { label: '@bygreciacepeda', url: 'https://www.instagram.com/bygreciacepeda/' },

@@ -16,7 +16,8 @@ export default {
       fontFamily: {
         serif: ['"Cormorant Garamond"', 'serif'],
         sans: ['Montserrat', 'sans-serif'],
-        script: ['"Beau Rivage"', 'cursive'],
+        script: ['Allura', 'cursive'],
+        firma: ['Allura', 'cursive'],
       },
     },
   },

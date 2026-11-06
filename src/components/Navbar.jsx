@@ -26,7 +26,7 @@ export default function Navbar() {
       }`}
     >
       <nav className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 md:px-6">
-        <a href="#inicio" className="font-script text-3xl text-accent md:text-4xl">
+        <a href="#inicio" className="font-firma text-3xl text-accent md:text-4xl">
           {site.name}
         </a>
 

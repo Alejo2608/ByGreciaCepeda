@@ -32,7 +32,7 @@ function MapPinIcon({ className }) {
 }
 
 const cardClass =
-  'group flex flex-1 items-center justify-center gap-4 rounded-2xl bg-white/60 px-8 py-6 text-center ring-1 ring-mist transition hover:-translate-y-1 hover:shadow-lg';
+  'group flex flex-1 items-center justify-center gap-4 rounded-2xl bg-white/60 px-5 py-6 text-center ring-1 ring-mist lg:px-8 transition hover:-translate-y-1 hover:shadow-lg';
 
 export default function Social() {
   return (
