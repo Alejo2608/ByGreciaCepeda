@@ -24,10 +24,11 @@ test('pestañas: no pide términos, va directo a la hora y el botón dice Solici
   await elegirDia(dialog);
 
   await expect(dialog.getByRole('button', { name: '4:00 PM' })).toBeVisible();
+  // Las horas que ya no están disponibles se muestran tachadas (deshabilitadas), no se quitan.
   await expect(dialog.getByRole('button', { name: '6:00 PM' })).toHaveCount(0);
-  await expect(dialog.getByRole('button', { name: '5:30 PM' })).toHaveCount(0);
+  await expect(dialog.getByRole('button', { name: '5:30 PM' })).toBeDisabled();
 
-  await dialog.getByRole('button', { name: '4:00 PM' }).click();
+  await dialog.getByText('Hora disponible').locator('..').locator('button:enabled').first().click();
   await expect(dialog.getByRole('button', { name: 'Solicitar cita' })).toBeVisible();
   await expect(dialog.getByRole('button', { name: 'Continuar' })).toHaveCount(0);
   await expect(dialog.getByText('Datos adicionales')).toHaveCount(0);
@@ -45,10 +46,11 @@ test('maquillaje: pide términos, luego la encuesta y permite horas hasta las 6:
   await llenarDatosBasicos(dialog);
   await elegirDia(dialog);
 
+  // El horario llega hasta las 6:30 PM; las horas ya tomadas o pasadas aparecen tachadas.
   await expect(dialog.getByRole('button', { name: '6:30 PM' })).toBeVisible();
-  await expect(dialog.getByRole('button', { name: '7:00 PM' })).toHaveCount(0);
+  await expect(dialog.getByRole('button', { name: '7:00 PM' })).toBeDisabled();
 
-  await dialog.getByRole('button', { name: '6:30 PM' }).click();
+  await dialog.getByText('Hora disponible').locator('..').locator('button:enabled').first().click();
   await dialog.getByRole('button', { name: 'Continuar' }).click();
   await expect(dialog.getByText('¿Qué tipo de piel consideras que eres?')).toBeVisible();
   await expect(dialog.getByText('Datos adicionales', { exact: false })).toHaveCount(0);

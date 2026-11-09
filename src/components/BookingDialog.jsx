@@ -129,6 +129,23 @@ export default function BookingDialog({ open, onClose, service, preferences = fa
 
   const availableTimes = slots.fecha === fecha ? horasDelDia(fecha, busy) : [];
 
+  // Todas las horas del día (sin el almuerzo); las no disponibles se muestran tachadas.
+  const horasConEstado = (f, ocupados) => {
+    if (!f || !openDay(f) || bloque) return [];
+    const now = new Date();
+    const isToday = f === todayISO();
+    const nowHHMM = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    return dayTimes(preferences)
+      .filter((h) => !isBreakTime(h))
+      .map((h) => ({
+        h,
+        libre:
+          enHorario(h, minutes, f, preferences) &&
+          (!isToday || h > nowHHMM) &&
+          slotIdsFor(f, h, minutes).every((id) => !ocupados.has(id)),
+      }));
+  };
+
   // Para los cursos la hora es siempre la de inicio de la franja.
   const selected = bloque ? (availableTimes[0] ?? '') : hora;
 
@@ -308,15 +325,20 @@ export default function BookingDialog({ open, onClose, service, preferences = fa
                 {bloque && availableTimes.length > 0 && (
                   <p className="mt-2 text-sm">{fechaTexto()}</p>
                 )}
-                {!bloque && (
+                {!bloque && !cargando && !errorCarga && (
                   <div className="mt-2 grid grid-cols-3 gap-2">
-                    {availableTimes.map((h) => (
+                    {horasConEstado(fecha, busy).map(({ h, libre }) => (
                       <button
                         key={h}
                         type="button"
+                        disabled={!libre}
                         onClick={() => setHora(h)}
                         className={`rounded-xl px-2 py-2 text-sm transition ${
-                          hora === h ? 'bg-ink text-paper' : 'bg-mist hover:bg-mist/60'
+                          !libre
+                            ? 'cursor-not-allowed bg-mist/60 text-ink/40 line-through'
+                            : hora === h
+                              ? 'bg-ink text-paper'
+                              : 'bg-mist hover:bg-mist/60'
                         }`}
                       >
                         {formatHour(h)}
