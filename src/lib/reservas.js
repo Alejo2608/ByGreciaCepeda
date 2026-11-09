@@ -80,6 +80,21 @@ export async function bloquearRango(fecha, bloques, afectadas) {
   await batch.commit();
 }
 
+// Edita todo de una cita a la vez: datos de la clienta, servicio, fecha y hora.
+// Solo guarda si el nuevo horario (según la duración del servicio) está libre.
+export function editarReserva(reserva, { nombre, telefono, instagram, servicio, fecha, hora }) {
+  const cambios = {
+    nombre,
+    telefono,
+    instagram,
+    servicio: servicio.name,
+    precio: servicio.price,
+    duracion: servicio.duration,
+    sinHorario: false,
+  };
+  return updateReserva(reserva, fecha, hora, cambios, servicio.duration);
+}
+
 // Cambia el servicio (y su precio y duración) de una cita, conservando fecha y hora.
 export function editReserva(reserva, servicio) {
   const cambios = { servicio: servicio.name, precio: servicio.price, duracion: servicio.duration };

@@ -6,9 +6,8 @@ import { ADMIN_EMAIL } from '../lib/admin';
 import {
   bloquearRango,
   createReserva,
-  editReserva,
+  editarReserva,
   esEditable,
-  moveReserva,
   removeReserva,
   swapReservas,
 } from '../lib/reservas';
@@ -64,14 +63,20 @@ const estadoTexto = {
   confirmada: 'text-green-700',
 };
 
-// Elegir nueva fecha y hora para una cita confirmada.
-function RescheduleBox({ reserva, onDone, onCancel }) {
+// Editar una cita: datos de la clienta, servicio, fecha y hora en un solo formulario.
+function EditarCita({ reserva, onDone, onCancel }) {
+  const [nombre, setNombre] = useState(reserva.nombre ?? '');
+  const [telefono, setTelefono] = useState(reserva.telefono ?? '');
+  const [instagram, setInstagram] = useState(reserva.instagram ?? '');
+  const [servicio, setServicio] = useState(
+    () => catalogo.flatMap((group) => group.items).find((item) => item.name === reserva.servicio) ?? null,
+  );
   const [fecha, setFecha] = useState(reserva.fecha);
-  const [hora, setHora] = useState('');
+  const [hora, setHora] = useState(reserva.sinHorario ? '' : reserva.hora);
   const [busy, setBusy] = useState(new Set());
   const [msg, setMsg] = useState('');
   const [saving, setSaving] = useState(false);
-  const minutes = durationMinutes(reserva.duracion);
+  const minutes = durationMinutes(servicio?.duration ?? reserva.duracion);
   // Las citas de maquillaje pueden ser en el horario amplio.
   const extended = Boolean(reserva.preferencias);
   const own = new Set(reserva.slots || []);
@@ -108,24 +113,65 @@ function RescheduleBox({ reserva, onDone, onCancel }) {
       : [];
 
   const save = async () => {
-    if (!hora) {
-      setMsg('Elige una hora.');
+    if (!nombre.trim()) {
+      setMsg('Escribe el nombre de la clienta.');
+      return;
+    }
+    if (!servicio) {
+      setMsg('Elige un servicio.');
+      return;
+    }
+    if (!hora || !times.includes(hora)) {
+      setMsg('Elige una hora disponible.');
       return;
     }
     setSaving(true);
+    setMsg('');
     try {
-      await moveReserva(reserva, fecha, hora);
+      await editarReserva(reserva, {
+        nombre: nombre.trim(),
+        telefono: telefono.trim(),
+        instagram: instagram.trim(),
+        servicio,
+        fecha,
+        hora,
+      });
       onDone();
     } catch (err) {
-      setMsg(err.message === 'ocupado' ? 'Ese horario ya está ocupado.' : 'No se pudo cambiar la cita.');
+      setMsg(err.message === 'ocupado' ? 'Ese horario ya está ocupado.' : 'No se pudo guardar la cita.');
     } finally {
       setSaving(false);
     }
   };
 
   return (
-    <div className="mt-4 space-y-4 rounded-2xl bg-mist/60 p-4">
-      <p className="text-xs uppercase tracking-widest text-accent">Cambiar fecha y hora</p>
+    <div className="mt-4 space-y-5">
+      <div className="space-y-3">
+        {[
+          ['Nombre', nombre, setNombre],
+          ['Teléfono', telefono, setTelefono],
+          ['Instagram', instagram, setInstagram],
+        ].map(([label, value, set]) => (
+          <label key={label} className="block text-xs uppercase tracking-widest text-accent">
+            {label}
+            <input
+              value={value}
+              onChange={(e) => set(e.target.value)}
+              className="mt-1 w-full rounded-xl bg-white px-4 py-2 text-sm normal-case tracking-normal text-ink ring-1 ring-mist focus:outline-none focus:ring-ink/40"
+            />
+          </label>
+        ))}
+      </div>
+
+      <div>
+        <p className="text-xs uppercase tracking-widest text-accent">Servicio</p>
+        <div className="mt-2">
+          <EditList reserva={reserva} selected={servicio?.name} onPick={setServicio} />
+        </div>
+      </div>
+
+      <div className="space-y-4 rounded-2xl bg-mist/60 p-4">
+        <p className="text-xs uppercase tracking-widest text-accent">Fecha y hora</p>
       <Calendar
         value={fecha}
         onChange={(d) => {
@@ -151,10 +197,11 @@ function RescheduleBox({ reserva, onDone, onCancel }) {
           ))}
         </div>
       )}
+      </div>
       {msg && <p className="text-sm text-accent">{msg}</p>}
       <div className="flex gap-2">
         <button type="button" onClick={save} disabled={saving} className="btn-fill px-5 py-2 text-xs disabled:opacity-50">
-          Guardar cambio
+          Guardar cambios
         </button>
         <button
           type="button"
@@ -207,7 +254,7 @@ function SwapList({ reserva, reservas, onPick }) {
 }
 
 // Servicios de la misma categoría que la cita (pestañas solo cambia a pestañas, etc.).
-function EditList({ reserva, onPick }) {
+function EditList({ reserva, selected, onPick }) {
   const grupo = catalogo.find((group) => group.items.some((item) => item.name === reserva.servicio));
   if (!grupo) return <p className="text-sm text-accent">Esta cita no se puede cambiar de servicio.</p>;
 
@@ -218,7 +265,7 @@ function EditList({ reserva, onPick }) {
           <p className="text-xs uppercase tracking-widest text-accent">{group.title}</p>
           <ul className="mt-2 space-y-2">
             {group.items.map((item) => {
-              const actual = item.name === reserva.servicio;
+              const actual = item.name === selected;
               return (
                 <li key={item.id}>
                   <button
@@ -251,7 +298,7 @@ export default function AdminPanel() {
   const [message, setMessage] = useState('');
   const [releasing, setReleasing] = useState(null); // reserva por liberar o desbloquear
   const [turno, setTurno] = useState('manana');
-  const [accion, setAccion] = useState(null); // { tipo: 'cambiar' | 'editar' | 'intercambiar', reserva }
+  const [accion, setAccion] = useState(null); // { tipo: 'editar' | 'intercambiar', reserva }
   const [swapPending, setSwapPending] = useState(null); // { a, b } por confirmar
 
   const isAdmin = Boolean(user && user.email === ADMIN_EMAIL && user.emailVerified);
@@ -337,21 +384,6 @@ export default function AdminPanel() {
       await removeReserva(reserva);
     } catch {
       setMessage('No se pudo liberar el horario. Intenta de nuevo.');
-    }
-  };
-
-  const guardarEdicion = async (servicio) => {
-    const reserva = accion.reserva;
-    setAccion(null);
-    setMessage('');
-    try {
-      await editReserva(reserva, servicio);
-    } catch (err) {
-      setMessage(
-        err.message === 'ocupado'
-          ? 'Con ese servicio la cita se cruza con otra. Elige otro horario.'
-          : 'No se pudo editar la cita.',
-      );
     }
   };
 
@@ -506,29 +538,20 @@ export default function AdminPanel() {
                     {esEditable(r) && (
                       <button
                         type="button"
-                        onClick={() => setAccion({ tipo: 'cambiar', reserva: r })}
+                        onClick={() => setAccion({ tipo: 'editar', reserva: r })}
                         className="rounded-full border border-ink/30 px-3 py-1 transition hover:bg-mist"
                       >
-                        {r.sinHorario ? 'Asignar horario' : 'Cambiar'}
+                        {r.sinHorario ? 'Asignar horario' : 'Editar'}
                       </button>
                     )}
                     {esEditable(r) && !r.sinHorario && (
-                      <>
-                        <button
-                          type="button"
-                          onClick={() => setAccion({ tipo: 'editar', reserva: r })}
-                          className="rounded-full border border-ink/30 px-3 py-1 transition hover:bg-mist"
-                        >
-                          Editar
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setAccion({ tipo: 'intercambiar', reserva: r })}
-                          className="rounded-full border border-ink/30 px-3 py-1 transition hover:bg-mist"
-                        >
-                          Intercambiar
-                        </button>
-                      </>
+                      <button
+                        type="button"
+                        onClick={() => setAccion({ tipo: 'intercambiar', reserva: r })}
+                        className="rounded-full border border-ink/30 px-3 py-1 transition hover:bg-mist"
+                      >
+                        Intercambiar
+                      </button>
                     )}
                     <button
                       type="button"
@@ -673,18 +696,12 @@ export default function AdminPanel() {
         </AdminModal>
       )}
 
-      {accion?.tipo === 'cambiar' && (
-        <AdminModal title="Cambiar hora" onClose={() => setAccion(null)}>
-          <RescheduleBox reserva={accion.reserva} onDone={() => setAccion(null)} onCancel={() => setAccion(null)} />
-        </AdminModal>
-      )}
-
       {accion?.tipo === 'editar' && (
-        <AdminModal title="Editar servicio" onClose={() => setAccion(null)}>
-          <p className="mb-5 text-sm text-accent">
+        <AdminModal title="Editar cita" onClose={() => setAccion(null)}>
+          <p className="mb-2 text-sm text-accent">
             {accion.reserva.nombre} · {formatFecha(accion.reserva.fecha)} · {formatHour(accion.reserva.hora)}
           </p>
-          <EditList reserva={accion.reserva} onPick={guardarEdicion} />
+          <EditarCita reserva={accion.reserva} onDone={() => setAccion(null)} onCancel={() => setAccion(null)} />
         </AdminModal>
       )}
 
