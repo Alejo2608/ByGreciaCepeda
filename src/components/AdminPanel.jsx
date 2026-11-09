@@ -53,6 +53,16 @@ const statusLabel = {
   bloqueado: 'Bloqueado',
 };
 
+// Solicitud pendiente: gris y texto rojo. Cita confirmada: blanca y texto verde.
+const estadoFondo = {
+  pendiente: 'bg-ink/10 ring-ink/20',
+  confirmada: 'bg-white ring-mist',
+};
+const estadoTexto = {
+  pendiente: 'text-red-600',
+  confirmada: 'text-green-700',
+};
+
 // Elegir nueva fecha y hora para una cita confirmada.
 function RescheduleBox({ reserva, onDone, onCancel }) {
   const [fecha, setFecha] = useState(reserva.fecha);
@@ -476,7 +486,7 @@ export default function AdminPanel() {
             {citasDelDia.length === 0 && <p className="mt-4 text-sm text-accent">No hay citas para este día.</p>}
             <ul className="mt-4 space-y-3">
               {citasDelDia.map((r) => (
-                <li key={r.id} className="rounded-xl bg-white/70 px-4 py-3 ring-1 ring-mist">
+                <li key={r.id} className={`rounded-xl px-4 py-3 ring-1 ${estadoFondo[r.estado] ?? 'bg-white/70 ring-mist'}`}>
                   <p className="text-sm font-medium">
                     {formatHour(r.hora)} · {r.nombre}
                   </p>
@@ -484,7 +494,11 @@ export default function AdminPanel() {
                     {r.servicio} · {r.duracion} · {r.telefono}
                     {r.instagram && ` · ${r.instagram}`}
                   </p>
-                  <p className="mt-1 text-xs uppercase tracking-widest text-accent">
+                  <p
+                    className={`mt-1 text-xs uppercase tracking-widest ${
+                      r.sinHorario ? 'text-accent' : (estadoTexto[r.estado] ?? 'text-accent')
+                    }`}
+                  >
                     {r.sinHorario ? 'Sin horario' : statusLabel[r.estado]}
                   </p>
                   <div className="mt-3 flex flex-wrap gap-2 text-xs uppercase tracking-widest">
@@ -585,7 +599,7 @@ export default function AdminPanel() {
 
               <ul className="mt-4 space-y-2">
                 {rowsTurno.map(({ hora, reserva, esInicio, almuerzo }) => (
-                  <li key={hora} className="rounded-xl bg-white/70 px-4 py-3 ring-1 ring-mist">
+                  <li key={hora} className={`rounded-xl px-4 py-3 ring-1 ${(reserva && estadoFondo[reserva.estado]) || 'bg-white/70 ring-mist'}`}>
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <span className="w-20 text-sm font-medium">{formatHour(hora)}</span>
 
@@ -605,7 +619,7 @@ export default function AdminPanel() {
                       )}
 
                       {!almuerzo && reserva && !esInicio && (
-                        <span className="text-sm text-accent">
+                        <span className={`text-sm ${estadoTexto[reserva.estado] ?? 'text-accent'}`}>
                           {statusLabel[reserva.estado]} · {reserva.nombre} (continúa)
                         </span>
                       )}
@@ -613,7 +627,7 @@ export default function AdminPanel() {
                       {!almuerzo && reserva && esInicio && (
                         <div className="flex flex-1 flex-wrap items-center justify-between gap-3">
                           <div className="text-sm">
-                            <p className="font-medium">
+                            <p className={`font-medium ${estadoTexto[reserva.estado] ?? ''}`}>
                               {statusLabel[reserva.estado]} · {reserva.nombre}
                             </p>
                             {reserva.estado !== 'bloqueado' && (
