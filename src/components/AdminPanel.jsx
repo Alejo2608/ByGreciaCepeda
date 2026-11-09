@@ -53,9 +53,10 @@ const statusLabel = {
   bloqueado: 'Bloqueado',
 };
 
-// Solicitud pendiente: gris y texto rojo. Cita confirmada: blanca y texto verde.
+// Solicitud pendiente: fondo negro claro de la paleta (accent) con textos claros. Cita confirmada: blanca.
 const estadoFondo = {
-  pendiente: 'bg-ink/10 ring-ink/20',
+  pendiente:
+    'bg-accent text-paper ring-accent [&_.text-accent]:text-paper/80 [&_.text-red-600]:text-red-300 [&_.btn-fill]:border-paper [&_.btn-fill]:text-paper',
   confirmada: 'bg-white ring-mist',
 };
 const estadoTexto = {
