@@ -69,7 +69,8 @@ export default function BookingDialog({ open, onClose, service, preferences = fa
   }, [open, onClose]);
 
   // Turnos ocupados de las próximas 3 semanas, para desactivar en el calendario los días sin horarios.
-  const [rango, setRango] = useState(new Set());
+  // Hasta que llegan los turnos, ningún día se puede elegir (null = todavía cargando).
+  const [rango, setRango] = useState(null);
   useEffect(() => {
     if (!open) return undefined;
     let cancelled = false;
@@ -302,7 +303,11 @@ export default function BookingDialog({ open, onClose, service, preferences = fa
                     setHora('');
                   }}
                   isDisabled={(d) =>
-                    d < todayISO() || d > maxBookingISO() || !openDay(d) || horasDelDia(d, rango).length === 0
+                    rango === null ||
+                    d < todayISO() ||
+                    d > maxBookingISO() ||
+                    !openDay(d) ||
+                    horasDelDia(d, rango).length === 0
                   }
                 />
               </div>
