@@ -65,21 +65,34 @@ const estadoTexto = {
 
 // Etiquetas en forma de píldora: el estado de la cita y si está pagada, cada una en su lugar.
 const pillBase = 'rounded-full px-3 py-1 text-[11px] font-medium uppercase tracking-widest';
-const pillPago = {
-  pagado: `${pillBase} bg-white text-green-700 ring-1 ring-green-600/40`,
-  noPagado: `${pillBase} bg-white text-red-600 ring-1 ring-red-500/40`,
-};
-
-function EstadoChips({ reserva }) {
+// Botón de pago: el círculo se rellena de verde cuando está pagado y queda vacío en rojo cuando no.
+function PagoToggle({ reserva, onToggle }) {
   const pagado = reserva.pagado === true;
   return (
-    <div className="flex flex-wrap justify-end gap-2">
+    <button
+      type="button"
+      onClick={() => onToggle(reserva)}
+      aria-pressed={pagado}
+      className={`${pillBase} inline-flex items-center gap-2 bg-white ring-1 transition hover:brightness-95 ${
+        pagado ? 'text-green-700 ring-green-600/40' : 'text-red-600 ring-red-500/40'
+      }`}
+    >
+      <span
+        aria-hidden="true"
+        className={`h-3 w-3 rounded-full border-2 ${pagado ? 'border-green-600 bg-green-600' : 'border-red-500 bg-transparent'}`}
+      />
+      {pagado ? 'Pagado' : 'No pagado'}
+    </button>
+  );
+}
+
+function EstadoChips({ reserva, onTogglePago }) {
+  return (
+    <div className="flex flex-wrap items-center justify-end gap-2">
       {reserva.estado !== 'bloqueado' && (
         <span className={`${pillBase} bg-white text-ink ring-1 ring-ink/15`}>{statusLabel[reserva.estado]}</span>
       )}
-      {reserva.estado !== 'bloqueado' && (
-        <span className={pagado ? pillPago.pagado : pillPago.noPagado}>{pagado ? 'Pagado' : 'No pagado'}</span>
-      )}
+      {reserva.estado !== 'bloqueado' && <PagoToggle reserva={reserva} onToggle={onTogglePago} />}
     </div>
   );
 }
@@ -564,37 +577,19 @@ export default function AdminPanel() {
                     {r.sinHorario ? (
                       <span className={`${pillBase} bg-white text-accent ring-1 ring-ink/15`}>Sin horario</span>
                     ) : (
-                      <EstadoChips reserva={r} />
+                      <EstadoChips reserva={r} onTogglePago={cambiarPago} />
                     )}
                   </div>
 
-                  <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-ink/10 pt-3">
-                    <button
-                      type="button"
-                      onClick={() => cambiarPago(r)}
-                      className="rounded-full bg-ink px-4 py-1.5 text-xs uppercase tracking-widest text-paper transition hover:bg-accent"
-                    >
-                      {r.pagado === true ? 'Marcar no pagado' : 'Marcar pagado'}
-                    </button>
-                    <div className="ml-auto flex flex-wrap items-center gap-x-4 gap-y-1 text-xs uppercase tracking-widest">
-                      {esEditable(r) && (
-                        <button type="button" onClick={() => setAccion({ tipo: 'editar', reserva: r })} className="underline-offset-4 hover:underline">
-                          {r.sinHorario ? 'Asignar horario' : 'Editar'}
-                        </button>
-                      )}
-                      {esEditable(r) && !r.sinHorario && (
-                        <button
-                          type="button"
-                          onClick={() => setAccion({ tipo: 'intercambiar', reserva: r })}
-                          className="underline-offset-4 hover:underline"
-                        >
-                          Intercambiar
-                        </button>
-                      )}
-                      <button type="button" onClick={() => liberar(r)} className="underline-offset-4 hover:underline">
-                        Liberar
+                  <div className="mt-3 flex flex-wrap items-center justify-end gap-x-4 gap-y-1 border-t border-ink/10 pt-3 text-xs uppercase tracking-widest">
+                    {esEditable(r) && (
+                      <button type="button" onClick={() => setAccion({ tipo: 'editar', reserva: r })} className="underline-offset-4 hover:underline">
+                        {r.sinHorario ? 'Asignar horario' : 'Editar'}
                       </button>
-                    </div>
+                    )}
+                    <button type="button" onClick={() => liberar(r)} className="underline-offset-4 hover:underline">
+                      Liberar
+                    </button>
                   </div>
                 </li>
               ))}
@@ -696,21 +691,12 @@ export default function AdminPanel() {
                               )}
                               {reserva.datos && <p className="mt-1 text-xs text-ink/75">{reserva.datos}</p>}
                             </div>
-                            <EstadoChips reserva={reserva} />
+                            <EstadoChips reserva={reserva} onTogglePago={cambiarPago} />
                           </div>
                           <div className="flex flex-wrap items-center gap-2 border-t border-ink/10 pt-3">
                             {reserva.estado === 'pendiente' && (
                               <button type="button" onClick={() => confirmar(reserva)} className="btn-fill px-4 py-1.5 text-xs">
                                 Confirmar
-                              </button>
-                            )}
-                            {reserva.estado !== 'bloqueado' && (
-                              <button
-                                type="button"
-                                onClick={() => cambiarPago(reserva)}
-                                className="rounded-full bg-ink px-4 py-1.5 text-xs uppercase tracking-widest text-paper transition hover:bg-accent"
-                              >
-                                {reserva.pagado === true ? 'Marcar no pagado' : 'Marcar pagado'}
                               </button>
                             )}
                             <button
