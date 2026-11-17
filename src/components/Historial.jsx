@@ -28,7 +28,7 @@ function ResumenCategorias({ citas }) {
     <span className="flex flex-wrap gap-1.5 normal-case tracking-normal">
       {ORDEN.filter((c) => cuenta[c]).map((c) => (
         <span key={c} className="rounded-full bg-mist px-2.5 py-0.5 text-xs text-ink/80">
-          {c} <span className="font-medium text-ink">{cuenta[c]}</span>
+          <span className="font-medium text-ink">{cuenta[c]}</span> {c}
         </span>
       ))}
     </span>
