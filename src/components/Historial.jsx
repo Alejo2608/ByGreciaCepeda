@@ -17,16 +17,22 @@ function categoriaDe(servicio) {
   return categorias.find(([nombre]) => nombre === servicio)?.[1] ?? 'Otros';
 }
 
-// Resumen por categoría: "3 pestañas · 2 cejas · 1 maquillaje".
-function resumenCategorias(citas) {
+// Resumen por categoría como pequeñas etiquetas: [Pestañas 3] [Cejas 2] [Maquillaje 1].
+function ResumenCategorias({ citas }) {
   const cuenta = {};
   citas.forEach((r) => {
     const c = categoriaDe(r.servicio);
     cuenta[c] = (cuenta[c] || 0) + 1;
   });
-  return ORDEN.filter((c) => cuenta[c])
-    .map((c) => `${cuenta[c]} ${c.toLowerCase()}`)
-    .join(' · ');
+  return (
+    <span className="flex flex-wrap gap-1.5 normal-case tracking-normal">
+      {ORDEN.filter((c) => cuenta[c]).map((c) => (
+        <span key={c} className="rounded-full bg-mist px-2.5 py-0.5 text-xs text-ink/80">
+          {c} <span className="font-medium text-ink">{cuenta[c]}</span>
+        </span>
+      ))}
+    </span>
+  );
 }
 
 // Nombre del mes en español, con mayúscula inicial: "2026-11" → "Noviembre 2026".
@@ -119,10 +125,10 @@ export default function Historial({ archivo }) {
               clave={claveMes}
               titulo={nombreMes(mes.mes)}
               detalle={
-                <>
-                  {contar(mes.total, 'cita', 'citas')}
-                  <span className="normal-case tracking-normal"> ({resumenCategorias(mes.semanas.flatMap((s) => s.dias.flatMap((d) => d.lista)))})</span>
-                </>
+                <span className="flex flex-col items-end gap-2">
+                  <span>{contar(mes.total, 'cita', 'citas')}</span>
+                  <ResumenCategorias citas={mes.semanas.flatMap((s) => s.dias.flatMap((d) => d.lista))} />
+                </span>
               }
               className="px-5 py-4 text-xl"
             />
@@ -137,10 +143,10 @@ export default function Historial({ archivo }) {
                         clave={claveSemana}
                         titulo={`Semana del ${formatFecha(semana.lunes)}`}
                         detalle={
-                          <>
-                            {contar(semana.total, 'cita', 'citas')}
-                            <span className="normal-case tracking-normal"> ({resumenCategorias(semana.dias.flatMap((d) => d.lista))})</span>
-                          </>
+                          <span className="flex flex-col items-end gap-2">
+                            <span>{contar(semana.total, 'cita', 'citas')}</span>
+                            <ResumenCategorias citas={semana.dias.flatMap((d) => d.lista)} />
+                          </span>
                         }
                         className="px-4 py-3 text-lg"
                       />
