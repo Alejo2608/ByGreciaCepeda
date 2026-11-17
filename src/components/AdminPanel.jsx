@@ -65,7 +65,7 @@ const estadoTexto = {
 
 // Etiquetas en forma de píldora: el estado de la cita y si está pagada, cada una en su lugar.
 const pillBase = 'rounded-full px-3 py-1 text-[11px] font-medium uppercase tracking-widest';
-// Botón de pago: el círculo se rellena de verde cuando está pagado y queda vacío en rojo cuando no.
+// Botón de pago: se pinta completo de verde si está pagada y de rojo si no. Al tocarlo cambia el estado.
 function PagoToggle({ reserva, onToggle }) {
   const pagado = reserva.pagado === true;
   return (
@@ -73,26 +73,21 @@ function PagoToggle({ reserva, onToggle }) {
       type="button"
       onClick={() => onToggle(reserva)}
       aria-pressed={pagado}
-      className={`${pillBase} inline-flex items-center gap-2 bg-white ring-1 transition hover:brightness-95 ${
-        pagado ? 'text-green-700 ring-green-600/40' : 'text-red-600 ring-red-500/40'
+      className={`rounded-full px-4 py-1.5 text-xs font-medium uppercase tracking-widest text-white transition ${
+        pagado ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'
       }`}
     >
-      <span
-        aria-hidden="true"
-        className={`h-3 w-3 rounded-full border-2 ${pagado ? 'border-green-600 bg-green-600' : 'border-red-500 bg-transparent'}`}
-      />
-      {pagado ? 'Pagado' : 'No pagado'}
+      {pagado ? 'Marcar no pagado' : 'Marcar pagado'}
     </button>
   );
 }
 
-function EstadoChips({ reserva, onTogglePago }) {
+function EstadoChips({ reserva }) {
   return (
     <div className="flex flex-wrap items-center justify-end gap-2">
       {reserva.estado !== 'bloqueado' && (
         <span className={`${pillBase} bg-white text-ink ring-1 ring-ink/15`}>{statusLabel[reserva.estado]}</span>
       )}
-      {reserva.estado !== 'bloqueado' && <PagoToggle reserva={reserva} onToggle={onTogglePago} />}
     </div>
   );
 }
@@ -577,11 +572,12 @@ export default function AdminPanel() {
                     {r.sinHorario ? (
                       <span className={`${pillBase} bg-white text-accent ring-1 ring-ink/15`}>Sin horario</span>
                     ) : (
-                      <EstadoChips reserva={r} onTogglePago={cambiarPago} />
+                      <EstadoChips reserva={r} />
                     )}
                   </div>
 
-                  <div className="mt-3 flex flex-wrap items-center justify-end gap-x-4 gap-y-1 border-t border-ink/10 pt-3 text-xs uppercase tracking-widest">
+                  <div className="mt-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-3 border-t border-ink/10 pt-3 text-xs uppercase tracking-widest">
+                    <PagoToggle reserva={r} onToggle={cambiarPago} />
                     {esEditable(r) && (
                       <button type="button" onClick={() => setAccion({ tipo: 'editar', reserva: r })} className="underline-offset-4 hover:underline">
                         {r.sinHorario ? 'Asignar horario' : 'Editar'}
@@ -691,7 +687,7 @@ export default function AdminPanel() {
                               )}
                               {reserva.datos && <p className="mt-1 text-xs text-ink/75">{reserva.datos}</p>}
                             </div>
-                            <EstadoChips reserva={reserva} onTogglePago={cambiarPago} />
+                            <EstadoChips reserva={reserva} />
                           </div>
                           <div className="flex flex-wrap items-center gap-2 border-t border-ink/10 pt-3">
                             {reserva.estado === 'pendiente' && (
@@ -699,6 +695,7 @@ export default function AdminPanel() {
                                 Confirmar
                               </button>
                             )}
+                            {reserva.estado !== 'bloqueado' && <PagoToggle reserva={reserva} onToggle={cambiarPago} />}
                             <button
                               type="button"
                               onClick={() => liberar(reserva)}
