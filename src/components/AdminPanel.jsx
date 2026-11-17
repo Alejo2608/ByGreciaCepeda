@@ -28,6 +28,7 @@ import {
   todayISO,
 } from '../lib/schedule';
 import Calendar from './Calendar';
+import Historial from './Historial';
 import ConfirmDialog from './ConfirmDialog';
 import AdminModal from './AdminModal';
 import AgendarClienta from './AgendarClienta';
@@ -765,20 +766,27 @@ export default function AdminPanel() {
 
           {message && <p className="mt-4 text-sm text-accent">{message}</p>}
 
+        </div>
+      </div>
+
+      {/* Aviso flotante: se queda en pantalla hasta que Grecia lo cierre, aunque esté lejos de la lista. */}
+      {avisos.length > 0 && (
+        <div aria-live="assertive" className="fixed inset-x-4 top-24 z-[55] mx-auto max-w-sm space-y-3">
           {avisos.map((aviso, i) => (
-            <div key={i} role="alert" className="mt-4 flex items-start justify-between gap-4 rounded-2xl bg-green-50 px-5 py-4 ring-1 ring-green-700/30">
-              <p className="text-sm text-green-800">{aviso}</p>
+            <div key={i} role="alert" className="rounded-2xl bg-paper p-5 shadow-xl ring-1 ring-green-700/40">
+              <p className="font-serif text-2xl text-green-800">Día completo</p>
+              <p className="mt-2 text-sm text-ink/80">{aviso}</p>
               <button
                 type="button"
                 onClick={() => setAvisos((a) => a.filter((_, j) => j !== i))}
-                className="shrink-0 rounded-full border border-green-700/40 px-3 py-1 text-xs uppercase tracking-widest text-green-800 transition hover:bg-green-100"
+                className="btn-fill mt-4 px-5 py-2 text-xs"
               >
                 Entendido
               </button>
             </div>
           ))}
         </div>
-      </div>
+      )}
 
       {isAdmin && (
         <section className="mt-16 border-t border-ink/10 pt-12">
@@ -793,47 +801,7 @@ export default function AdminPanel() {
                 <span aria-hidden="true" className="text-base transition group-open:rotate-180">⌄</span>
               </span>
             </summary>
-            {archivo.length === 0 && <p className="mt-6 text-sm text-accent">Todavía no hay días archivados.</p>}
-            {Object.entries(
-              archivo.reduce((grupos, r) => {
-                (grupos[r.fecha] ??= []).push(r);
-                return grupos;
-              }, {}),
-            )
-              .sort(([a], [b]) => b.localeCompare(a))
-              .map(([f, lista]) => (
-                <div key={f} className="mt-5">
-                  <p className="text-xs uppercase tracking-widest text-accent">{formatFecha(f)}</p>
-                  <ul className="mt-2 space-y-2">
-                    {lista
-                      .sort((a, b) => a.hora.localeCompare(b.hora))
-                      .map((r) => (
-                        <li
-                          key={r.id}
-                          className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-white px-4 py-3 ring-1 ring-mist"
-                        >
-                          <div className="min-w-0">
-                            <p className="text-sm font-medium">
-                              {formatHour(r.hora)} · {r.nombre}
-                            </p>
-                            <p className="text-xs text-accent">
-                              {r.servicio} · {r.precio}
-                              {r.telefono && ` · ${r.telefono}`}
-                              {r.instagram && ` · ${r.instagram}`}
-                            </p>
-                          </div>
-                          <span
-                            className={`rounded-full px-3 py-1 text-[11px] uppercase tracking-widest text-white ${
-                              r.pagado === true ? 'bg-green-700' : 'bg-red-600'
-                            }`}
-                          >
-                            {r.pagado === true ? 'Pagado' : 'No pagado'}
-                          </span>
-                        </li>
-                      ))}
-                  </ul>
-                </div>
-              ))}
+            <Historial archivo={archivo} />
           </details>
         </section>
       )}
