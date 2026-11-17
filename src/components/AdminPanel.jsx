@@ -302,6 +302,7 @@ export default function AdminPanel() {
   const [accion, setAccion] = useState(null); // { tipo: 'editar' | 'intercambiar', reserva }
   const [swapPending, setSwapPending] = useState(null); // { a, b } por confirmar
   const [avisos, setAvisos] = useState([]); // avisos de días archivados, hasta que Grecia los cierre
+  const [archivo, setArchivo] = useState([]); // clientas ya atendidas (colección archivo)
   const archivando = useRef(new Set()); // días que se están archivando (evita repetir)
 
   const isAdmin = Boolean(user && user.email === ADMIN_EMAIL && user.emailVerified);
@@ -339,6 +340,14 @@ export default function AdminPanel() {
         .sort((a, b) => a.hora.localeCompare(b.hora)),
     [reservas, fecha],
   );
+
+  // Clientas ya atendidas, para la sección de días anteriores.
+  useEffect(() => {
+    if (!isAdmin) return undefined;
+    return onSnapshot(collection(db, 'archivo'), (snap) => {
+      setArchivo(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+    });
+  }, [isAdmin]);
 
   // Días ya llegados (hoy o antes) en los que todas las citas están pagadas: se archivan solos y se avisa a Grecia.
   useEffect(() => {
@@ -770,6 +779,60 @@ export default function AdminPanel() {
           ))}
         </div>
       </div>
+
+      {isAdmin && (
+        <section className="mx-auto max-w-4xl px-6 pb-24">
+          <details className="group rounded-2xl bg-white/60 px-5 py-4 ring-1 ring-mist">
+            <summary className="cursor-pointer list-none font-serif text-2xl">
+              Clientas ya atendidas (días anteriores)
+              <span className="ml-3 align-middle text-xs uppercase tracking-widest text-accent">
+                {archivo.length} {archivo.length === 1 ? 'cita' : 'citas'}
+              </span>
+            </summary>
+            {archivo.length === 0 && <p className="mt-4 text-sm text-accent">Todavía no hay días archivados.</p>}
+            {Object.entries(
+              archivo.reduce((grupos, r) => {
+                (grupos[r.fecha] ??= []).push(r);
+                return grupos;
+              }, {}),
+            )
+              .sort(([a], [b]) => b.localeCompare(a))
+              .map(([f, lista]) => (
+                <div key={f} className="mt-5">
+                  <p className="text-xs uppercase tracking-widest text-accent capitalize">{formatFecha(f)}</p>
+                  <ul className="mt-2 space-y-2">
+                    {lista
+                      .sort((a, b) => a.hora.localeCompare(b.hora))
+                      .map((r) => (
+                        <li
+                          key={r.id}
+                          className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-white px-4 py-3 ring-1 ring-mist"
+                        >
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium">
+                              {formatHour(r.hora)} · {r.nombre}
+                            </p>
+                            <p className="text-xs text-accent">
+                              {r.servicio} · {r.precio}
+                              {r.telefono && ` · ${r.telefono}`}
+                              {r.instagram && ` · ${r.instagram}`}
+                            </p>
+                          </div>
+                          <span
+                            className={`rounded-full px-3 py-1 text-[11px] uppercase tracking-widest text-white ${
+                              r.pagado === true ? 'bg-green-700' : 'bg-red-600'
+                            }`}
+                          >
+                            {r.pagado === true ? 'Pagado' : 'No pagado'}
+                          </span>
+                        </li>
+                      ))}
+                  </ul>
+                </div>
+              ))}
+          </details>
+        </section>
+      )}
 
       {accion?.tipo === 'agendar' && (
         <AdminModal title="Agendar clienta" onClose={() => setAccion(null)}>
