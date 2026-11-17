@@ -55,7 +55,7 @@ const statusLabel = {
 // Solicitud pendiente: fondo negro claro de la paleta (accent) con textos claros. Cita confirmada: blanca.
 const estadoFondo = {
   pendiente:
-    'bg-accent text-paper ring-accent [&_.text-accent]:text-paper/80 [&_.text-red-600]:text-red-300 [&_.btn-fill]:border-paper [&_.btn-fill]:text-paper',
+    'bg-accent text-paper ring-accent [&_.text-accent]:text-paper/80 [&_.text-red-600]:text-red-300 [&_.text-green-700]:text-green-300 [&_.btn-fill]:border-paper [&_.btn-fill]:text-paper',
   confirmada: 'bg-white ring-mist',
 };
 const estadoTexto = {
@@ -373,6 +373,16 @@ export default function AdminPanel() {
     }
   };
 
+  // Marca la cita como pagada o no pagada. Las citas viejas sin el campo cuentan como no pagadas.
+  const cambiarPago = async (r) => {
+    setMessage('');
+    try {
+      await updateDoc(doc(db, 'reservas', r.id), { pagado: !(r.pagado === true) });
+    } catch {
+      setMessage('No se pudo actualizar el pago. Intenta de nuevo.');
+    }
+  };
+
   // Pide confirmación en una ventana propia del panel (sin la del navegador).
   const liberar = (r) => setReleasing(r);
 
@@ -534,7 +544,21 @@ export default function AdminPanel() {
                   >
                     {r.sinHorario ? 'Sin horario' : statusLabel[r.estado]}
                   </p>
+                  <p
+                    className={`mt-1 text-xs font-medium uppercase tracking-widest ${
+                      r.pagado === true ? 'text-green-700' : 'text-red-600'
+                    }`}
+                  >
+                    {r.pagado === true ? 'Pagado' : 'No pagado'}
+                  </p>
                   <div className="mt-3 flex flex-wrap gap-2 text-xs uppercase tracking-widest">
+                    <button
+                      type="button"
+                      onClick={() => cambiarPago(r)}
+                      className="rounded-full border border-ink/30 px-3 py-1 transition hover:bg-mist"
+                    >
+                      {r.pagado === true ? 'Marcar no pagado' : 'Marcar pagado'}
+                    </button>
                     {esEditable(r) && (
                       <button
                         type="button"
