@@ -65,7 +65,7 @@ const estadoTexto = {
 
 // Etiquetas en forma de píldora: el estado de la cita y si está pagada, cada una en su lugar.
 const pillBase = 'rounded-full px-3 py-1 text-[11px] font-medium uppercase tracking-widest';
-// Botón de pago: se pinta completo de verde si está pagada y de rojo si no. Al tocarlo cambia el estado.
+// Botón de pago: muestra Pagado (verde) o No pagado (rojo). Al tocarlo cambia el estado.
 function PagoToggle({ reserva, onToggle }) {
   const pagado = reserva.pagado === true;
   return (
@@ -73,11 +73,11 @@ function PagoToggle({ reserva, onToggle }) {
       type="button"
       onClick={() => onToggle(reserva)}
       aria-pressed={pagado}
-      className={`rounded-full px-4 py-1.5 text-xs font-medium uppercase tracking-widest text-white transition ${
-        pagado ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'
+      className={`${pillBase} bg-white ring-1 transition hover:bg-mist ${
+        pagado ? 'text-green-700 ring-green-600/40' : 'text-red-600 ring-red-500/40'
       }`}
     >
-      {pagado ? 'Marcar no pagado' : 'Marcar pagado'}
+      {pagado ? 'Pagado' : 'No pagado'}
     </button>
   );
 }
