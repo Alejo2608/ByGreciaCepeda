@@ -55,13 +55,34 @@ const statusLabel = {
 // Solicitud pendiente: fondo negro claro de la paleta (accent) con textos claros. Cita confirmada: blanca.
 const estadoFondo = {
   pendiente:
-    'bg-accent text-paper ring-accent [&_.text-accent]:text-paper/80 [&_.text-red-600]:text-red-300 [&_.text-green-700]:text-green-300 [&_.btn-fill]:border-paper [&_.btn-fill]:text-paper',
+    'bg-accent text-paper ring-accent [&_.text-accent]:text-paper/80 [&_.text-red-600]:text-red-300 [&_.text-green-700]:text-green-300 [&_.btn-fill]:border-paper [&_.btn-fill]:text-paper [&_.bg-ink]:bg-paper [&_.bg-ink]:text-ink',
   confirmada: 'bg-white ring-mist',
 };
 const estadoTexto = {
   pendiente: 'text-red-600',
   confirmada: 'text-green-700',
 };
+
+// Etiquetas en forma de píldora: el estado de la cita y si está pagada, cada una en su lugar.
+const pillBase = 'rounded-full px-3 py-1 text-[11px] font-medium uppercase tracking-widest';
+const pillPago = {
+  pagado: `${pillBase} bg-white text-green-700 ring-1 ring-green-600/40`,
+  noPagado: `${pillBase} bg-white text-red-600 ring-1 ring-red-500/40`,
+};
+
+function EstadoChips({ reserva }) {
+  const pagado = reserva.pagado === true;
+  return (
+    <div className="flex flex-wrap justify-end gap-2">
+      {reserva.estado !== 'bloqueado' && (
+        <span className={`${pillBase} bg-white text-ink ring-1 ring-ink/15`}>{statusLabel[reserva.estado]}</span>
+      )}
+      {reserva.estado !== 'bloqueado' && (
+        <span className={pagado ? pillPago.pagado : pillPago.noPagado}>{pagado ? 'Pagado' : 'No pagado'}</span>
+      )}
+    </div>
+  );
+}
 
 // Editar una cita: datos de la clienta, servicio, fecha y hora en un solo formulario.
 function EditarCita({ reserva, onDone, onCancel }) {
@@ -530,60 +551,50 @@ export default function AdminPanel() {
             <ul className="mt-4 space-y-3">
               {citasDelDia.map((r) => (
                 <li key={r.id} className={`rounded-xl px-4 py-3 ring-1 ${estadoFondo[r.estado] ?? 'bg-white/70 ring-mist'}`}>
-                  <p className="text-sm font-medium">
-                    {formatHour(r.hora)} · {r.nombre}
-                  </p>
-                  <p className="text-xs text-accent">
-                    {r.servicio} · {r.duracion} · {r.telefono}
-                    {r.instagram && ` · ${r.instagram}`}
-                  </p>
-                  <p
-                    className={`mt-1 text-xs uppercase tracking-widest ${
-                      r.sinHorario ? 'text-accent' : (estadoTexto[r.estado] ?? 'text-accent')
-                    }`}
-                  >
-                    {r.sinHorario ? 'Sin horario' : statusLabel[r.estado]}
-                  </p>
-                  <p
-                    className={`mt-1 text-xs font-medium uppercase tracking-widest ${
-                      r.pagado === true ? 'text-green-700' : 'text-red-600'
-                    }`}
-                  >
-                    {r.pagado === true ? 'Pagado' : 'No pagado'}
-                  </p>
-                  <div className="mt-3 flex flex-wrap gap-2 text-xs uppercase tracking-widest">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium">
+                        {formatHour(r.hora)} · {r.nombre}
+                      </p>
+                      <p className="mt-0.5 text-xs text-accent">
+                        {r.servicio} · {r.duracion} · {r.telefono}
+                        {r.instagram && ` · ${r.instagram}`}
+                      </p>
+                    </div>
+                    {r.sinHorario ? (
+                      <span className={`${pillBase} bg-white text-accent ring-1 ring-ink/15`}>Sin horario</span>
+                    ) : (
+                      <EstadoChips reserva={r} />
+                    )}
+                  </div>
+
+                  <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-ink/10 pt-3">
                     <button
                       type="button"
                       onClick={() => cambiarPago(r)}
-                      className="rounded-full border border-ink/30 px-3 py-1 transition hover:bg-mist"
+                      className="rounded-full bg-ink px-4 py-1.5 text-xs uppercase tracking-widest text-paper transition hover:bg-accent"
                     >
                       {r.pagado === true ? 'Marcar no pagado' : 'Marcar pagado'}
                     </button>
-                    {esEditable(r) && (
-                      <button
-                        type="button"
-                        onClick={() => setAccion({ tipo: 'editar', reserva: r })}
-                        className="rounded-full border border-ink/30 px-3 py-1 transition hover:bg-mist"
-                      >
-                        {r.sinHorario ? 'Asignar horario' : 'Editar'}
+                    <div className="ml-auto flex flex-wrap items-center gap-x-4 gap-y-1 text-xs uppercase tracking-widest">
+                      {esEditable(r) && (
+                        <button type="button" onClick={() => setAccion({ tipo: 'editar', reserva: r })} className="underline-offset-4 hover:underline">
+                          {r.sinHorario ? 'Asignar horario' : 'Editar'}
+                        </button>
+                      )}
+                      {esEditable(r) && !r.sinHorario && (
+                        <button
+                          type="button"
+                          onClick={() => setAccion({ tipo: 'intercambiar', reserva: r })}
+                          className="underline-offset-4 hover:underline"
+                        >
+                          Intercambiar
+                        </button>
+                      )}
+                      <button type="button" onClick={() => liberar(r)} className="underline-offset-4 hover:underline">
+                        Liberar
                       </button>
-                    )}
-                    {esEditable(r) && !r.sinHorario && (
-                      <button
-                        type="button"
-                        onClick={() => setAccion({ tipo: 'intercambiar', reserva: r })}
-                        className="rounded-full border border-ink/30 px-3 py-1 transition hover:bg-mist"
-                      >
-                        Intercambiar
-                      </button>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => liberar(r)}
-                      className="rounded-full border border-ink/30 px-3 py-1 transition hover:bg-mist"
-                    >
-                      Liberar
-                    </button>
+                    </div>
                   </div>
                 </li>
               ))}
@@ -673,29 +684,39 @@ export default function AdminPanel() {
                       )}
 
                       {!almuerzo && reserva && esInicio && (
-                        <div className="flex flex-1 flex-wrap items-center justify-between gap-3">
-                          <div className="text-sm">
-                            <p className={`font-medium ${estadoTexto[reserva.estado] ?? ''}`}>
-                              {statusLabel[reserva.estado]} · {reserva.nombre}
-                            </p>
-                            {reserva.estado !== 'bloqueado' && (
-                              <p className="text-xs text-accent">
-                                {reserva.servicio} · {reserva.telefono}
-                                {reserva.instagram && ` · ${reserva.instagram}`}
-                              </p>
-                            )}
-                            {reserva.datos && <p className="mt-1 text-xs text-ink/75">{reserva.datos}</p>}
+                        <div className="flex flex-1 flex-col gap-3">
+                          <div className="flex flex-wrap items-start justify-between gap-3">
+                            <div className="min-w-0 text-sm">
+                              <p className="font-medium">{reserva.nombre}</p>
+                              {reserva.estado !== 'bloqueado' && (
+                                <p className="mt-0.5 text-xs text-accent">
+                                  {reserva.servicio} · {reserva.telefono}
+                                  {reserva.instagram && ` · ${reserva.instagram}`}
+                                </p>
+                              )}
+                              {reserva.datos && <p className="mt-1 text-xs text-ink/75">{reserva.datos}</p>}
+                            </div>
+                            <EstadoChips reserva={reserva} />
                           </div>
-                          <div className="flex flex-wrap gap-2">
+                          <div className="flex flex-wrap items-center gap-2 border-t border-ink/10 pt-3">
                             {reserva.estado === 'pendiente' && (
-                              <button type="button" onClick={() => confirmar(reserva)} className="btn-fill px-4 py-1 text-xs">
+                              <button type="button" onClick={() => confirmar(reserva)} className="btn-fill px-4 py-1.5 text-xs">
                                 Confirmar
+                              </button>
+                            )}
+                            {reserva.estado !== 'bloqueado' && (
+                              <button
+                                type="button"
+                                onClick={() => cambiarPago(reserva)}
+                                className="rounded-full bg-ink px-4 py-1.5 text-xs uppercase tracking-widest text-paper transition hover:bg-accent"
+                              >
+                                {reserva.pagado === true ? 'Marcar no pagado' : 'Marcar pagado'}
                               </button>
                             )}
                             <button
                               type="button"
                               onClick={() => liberar(reserva)}
-                              className="rounded-full border border-ink/30 px-4 py-1 text-xs uppercase tracking-widest transition hover:bg-mist"
+                              className="ml-auto text-xs uppercase tracking-widest underline-offset-4 hover:underline"
                             >
                               {reserva.estado === 'bloqueado' ? 'Desbloquear' : 'Cancelar cita'}
                             </button>
