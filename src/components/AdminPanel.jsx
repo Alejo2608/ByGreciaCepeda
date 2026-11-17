@@ -318,9 +318,12 @@ export default function AdminPanel() {
   }, [isAdmin]);
 
   // Cuántas reservas hay por día (para marcar el calendario).
+  // Los bloqueos de días ya pasados no cuentan: su punto se quita cuando el día termina.
   const counts = useMemo(() => {
     const map = {};
+    const hoy = todayISO();
     reservas.forEach((r) => {
+      if (r.estado === 'bloqueado' && r.fecha < hoy) return;
       map[r.fecha] = (map[r.fecha] || 0) + 1;
     });
     return map;

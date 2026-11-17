@@ -71,7 +71,7 @@ export default function Historial({ archivo }) {
         className={`flex w-full items-center justify-between gap-4 text-left ${className}`}
       >
         <span className="font-serif">{titulo}</span>
-        <span className="flex items-center gap-3 text-sm uppercase tracking-widest text-accent">
+        <span className="flex items-center gap-3 text-xs uppercase tracking-widest text-accent">
           {detalle}
           <span aria-hidden="true" className={`text-base transition ${abierto ? 'rotate-180' : ''}`}>
             ⌄
@@ -91,7 +91,7 @@ export default function Historial({ archivo }) {
               clave={claveMes}
               titulo={nombreMes(mes.mes)}
               detalle={contar(mes.total, 'cita', 'citas')}
-              className="px-5 py-5 text-2xl"
+              className="px-5 py-4 text-xl"
             />
 
             {abiertos[claveMes] && (
@@ -104,7 +104,7 @@ export default function Historial({ archivo }) {
                         clave={claveSemana}
                         titulo={`Semana del ${formatFecha(semana.lunes)}`}
                         detalle={contar(semana.total, 'cita', 'citas')}
-                        className="px-4 py-4 text-xl"
+                        className="px-4 py-3 text-lg"
                       />
 
                       {abiertos[claveSemana] && (
@@ -115,7 +115,7 @@ export default function Historial({ archivo }) {
                               <li key={fecha} className="rounded-lg bg-white ring-1 ring-mist">
                                 <Cabecera
                                   clave={claveDia}
-                                  titulo={<span className="text-lg capitalize">{formatFecha(fecha)}</span>}
+                                  titulo={<span className="text-base capitalize">{formatFecha(fecha)}</span>}
                                   detalle={contar(lista.length, 'clienta', 'clientas')}
                                   className="px-4 py-3"
                                 />
@@ -128,7 +128,7 @@ export default function Historial({ archivo }) {
                                         className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-mist/40 px-4 py-3"
                                       >
                                         <div className="min-w-0">
-                                          <p className="text-base font-medium">
+                                          <p className="text-sm font-medium">
                                             {formatHour(r.hora)} · {r.nombre}
                                           </p>
                                           <p className="text-sm text-accent">
