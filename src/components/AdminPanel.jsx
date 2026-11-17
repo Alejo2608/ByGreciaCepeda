@@ -781,15 +781,19 @@ export default function AdminPanel() {
       </div>
 
       {isAdmin && (
-        <section className="mx-auto max-w-4xl px-6 pb-24">
-          <details className="group rounded-2xl bg-white/60 px-5 py-4 ring-1 ring-mist">
-            <summary className="cursor-pointer list-none font-serif text-2xl">
-              Clientas ya atendidas (días anteriores)
-              <span className="ml-3 align-middle text-xs uppercase tracking-widest text-accent">
+        <section className="mt-16 border-t border-ink/10 pt-12">
+          <details className="group">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-4 pb-2">
+              <span>
+                <span className="block text-xs uppercase tracking-[0.35em] text-accent">Historial</span>
+                <span className="mt-2 block font-serif text-3xl">Clientas ya atendidas</span>
+              </span>
+              <span className="flex items-center gap-3 text-xs uppercase tracking-widest text-accent">
                 {archivo.length} {archivo.length === 1 ? 'cita' : 'citas'}
+                <span aria-hidden="true" className="text-base transition group-open:rotate-180">⌄</span>
               </span>
             </summary>
-            {archivo.length === 0 && <p className="mt-4 text-sm text-accent">Todavía no hay días archivados.</p>}
+            {archivo.length === 0 && <p className="mt-6 text-sm text-accent">Todavía no hay días archivados.</p>}
             {Object.entries(
               archivo.reduce((grupos, r) => {
                 (grupos[r.fecha] ??= []).push(r);
@@ -799,7 +803,7 @@ export default function AdminPanel() {
               .sort(([a], [b]) => b.localeCompare(a))
               .map(([f, lista]) => (
                 <div key={f} className="mt-5">
-                  <p className="text-xs uppercase tracking-widest text-accent capitalize">{formatFecha(f)}</p>
+                  <p className="text-xs uppercase tracking-widest text-accent">{formatFecha(f)}</p>
                   <ul className="mt-2 space-y-2">
                     {lista
                       .sort((a, b) => a.hora.localeCompare(b.hora))
