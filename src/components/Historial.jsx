@@ -71,7 +71,7 @@ export default function Historial({ archivo }) {
         className={`flex w-full items-center justify-between gap-4 text-left ${className}`}
       >
         <span className="font-serif">{titulo}</span>
-        <span className="flex items-center gap-3 text-xs uppercase tracking-widest text-accent">
+        <span className="flex items-center gap-3 text-sm uppercase tracking-widest text-accent">
           {detalle}
           <span aria-hidden="true" className={`text-base transition ${abierto ? 'rotate-180' : ''}`}>
             ⌄
@@ -128,7 +128,7 @@ export default function Historial({ archivo }) {
                                         className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-mist/40 px-4 py-3"
                                       >
                                         <div className="min-w-0">
-                                          <p className="text-sm font-medium">
+                                          <p className="text-base font-medium">
                                             {formatHour(r.hora)} · {r.nombre}
                                           </p>
                                           <p className="text-sm text-accent">
