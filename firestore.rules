@@ -48,5 +48,10 @@ service cloud.firestore {
       );
       allow read, update, delete: if isAdmin();
     }
+
+    // Citas ya atendidas y pagadas (archivo). Solo Grecia puede verlas o escribirlas.
+    match /archivo/{reservaId} {
+      allow read, create, update, delete: if isAdmin();
+    }
   }
 }

@@ -95,6 +95,19 @@ export function editarReserva(reserva, { nombre, telefono, instagram, servicio, 
   return updateReserva(reserva, fecha, hora, cambios, servicio.duration);
 }
 
+// Pasa las citas de un día ya atendido y pagado a la colección "archivo" y libera sus turnos.
+// Todo en un solo lote: si algo falla, no se guarda nada a medias.
+export async function archivarDia(reservasDia) {
+  const batch = writeBatch(db);
+  reservasDia.forEach((r) => {
+    const { id, ...datos } = r;
+    batch.set(doc(db, 'archivo', id), { ...datos, archivadoEn: serverTimestamp() });
+    batch.delete(doc(db, 'reservas', id));
+    (r.slots ?? []).forEach((slotId) => batch.delete(doc(db, 'slots', slotId)));
+  });
+  await batch.commit();
+}
+
 // Cambia el servicio (y su precio y duración) de una cita, conservando fecha y hora.
 export function editReserva(reserva, servicio) {
   const cambios = { servicio: servicio.name, precio: servicio.price, duracion: servicio.duration };

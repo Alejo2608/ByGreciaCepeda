@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { GoogleAuthProvider, onAuthStateChanged, signInWithPopup, signOut } from 'firebase/auth';
 import { collection, doc, getDocs, onSnapshot, query, updateDoc, where } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
@@ -6,6 +6,7 @@ import { ADMIN_EMAIL } from '../lib/admin';
 import {
   bloquearRango,
   createReserva,
+  archivarDia,
   editarReserva,
   esEditable,
   removeReserva,
@@ -55,42 +56,13 @@ const statusLabel = {
 // Solicitud pendiente: fondo negro claro de la paleta (accent) con textos claros. Cita confirmada: blanca.
 const estadoFondo = {
   pendiente:
-    'bg-accent text-paper ring-accent [&_.text-accent]:text-paper/80 [&_.text-red-600]:text-red-300 [&_.text-green-700]:text-green-300 [&_.btn-fill]:border-paper [&_.btn-fill]:text-paper [&_.bg-ink]:bg-paper [&_.bg-ink]:text-ink',
+    'bg-accent text-paper ring-accent [&_.text-accent]:text-paper/80 [&_.text-red-600]:text-red-300 [&_.text-green-700]:text-green-300 [&_.btn-fill]:border-paper [&_.btn-fill]:text-paper',
   confirmada: 'bg-white ring-mist',
 };
 const estadoTexto = {
   pendiente: 'text-red-600',
   confirmada: 'text-green-700',
 };
-
-// Etiquetas en forma de píldora: el estado de la cita y si está pagada, cada una en su lugar.
-const pillBase = 'rounded-full px-3 py-1 text-[11px] font-medium uppercase tracking-widest';
-// Botón de pago: muestra Pagado (verde) o No pagado (rojo). Al tocarlo cambia el estado.
-function PagoToggle({ reserva, onToggle }) {
-  const pagado = reserva.pagado === true;
-  return (
-    <button
-      type="button"
-      onClick={() => onToggle(reserva)}
-      aria-pressed={pagado}
-      className={`${pillBase} bg-white ring-1 transition hover:bg-mist ${
-        pagado ? 'text-green-700 ring-green-600/40' : 'text-red-600 ring-red-500/40'
-      }`}
-    >
-      {pagado ? 'Pagado' : 'No pagado'}
-    </button>
-  );
-}
-
-function EstadoChips({ reserva }) {
-  return (
-    <div className="flex flex-wrap items-center justify-end gap-2">
-      {reserva.estado !== 'bloqueado' && (
-        <span className={`${pillBase} bg-white text-ink ring-1 ring-ink/15`}>{statusLabel[reserva.estado]}</span>
-      )}
-    </div>
-  );
-}
 
 // Editar una cita: datos de la clienta, servicio, fecha y hora en un solo formulario.
 function EditarCita({ reserva, onDone, onCancel }) {
@@ -329,6 +301,8 @@ export default function AdminPanel() {
   const [turno, setTurno] = useState('manana');
   const [accion, setAccion] = useState(null); // { tipo: 'editar' | 'intercambiar', reserva }
   const [swapPending, setSwapPending] = useState(null); // { a, b } por confirmar
+  const [avisos, setAvisos] = useState([]); // avisos de días archivados, hasta que Grecia los cierre
+  const archivando = useRef(new Set()); // días que se están archivando (evita repetir)
 
   const isAdmin = Boolean(user && user.email === ADMIN_EMAIL && user.emailVerified);
 
@@ -365,6 +339,40 @@ export default function AdminPanel() {
         .sort((a, b) => a.hora.localeCompare(b.hora)),
     [reservas, fecha],
   );
+
+  // Días ya llegados (hoy o antes) en los que todas las citas están pagadas: se archivan solos y se avisa a Grecia.
+  useEffect(() => {
+    if (!isAdmin) return;
+    const grupos = {};
+    reservas
+      .filter((r) => r.estado !== 'bloqueado')
+      .forEach((r) => {
+        (grupos[r.fecha] ??= []).push(r);
+      });
+    const pagados = Object.keys(grupos).filter(
+      (f) => f <= todayISO() && grupos[f].every((r) => r.pagado === true),
+    );
+    // Si un día deja de estar pagado (p. ej. una cita nueva), se puede volver a archivar más adelante.
+    archivando.current.forEach((f) => {
+      if (!pagados.includes(f)) archivando.current.delete(f);
+    });
+    pagados.forEach((f) => {
+      if (archivando.current.has(f)) return;
+      archivando.current.add(f);
+      const lista = grupos[f];
+      archivarDia(lista)
+        .then(() =>
+          setAvisos((a) => [
+            ...a,
+            `Ya atendiste a todas las clientas del ${formatFecha(f)} y todas pagaron. Se archivaron ${lista.length} cita${lista.length === 1 ? '' : 's'}.`,
+          ]),
+        )
+        .catch(() => {
+          archivando.current.delete(f);
+          setMessage('No se pudo archivar el día. Se intentará de nuevo.');
+        });
+    });
+  }, [reservas, isAdmin]);
 
   if (user === undefined) return <p className="px-6 py-40 text-center text-sm text-accent">Cargando…</p>;
 
@@ -558,32 +566,63 @@ export default function AdminPanel() {
             {citasDelDia.length === 0 && <p className="mt-4 text-sm text-accent">No hay citas para este día.</p>}
             <ul className="mt-4 space-y-3">
               {citasDelDia.map((r) => (
-                <li key={r.id} className={`rounded-xl px-4 py-3 ring-1 ${estadoFondo[r.estado] ?? 'bg-white/70 ring-mist'}`}>
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium">
+                <li key={r.id} className={`rounded-2xl px-5 py-4 ring-1 ${estadoFondo[r.estado] ?? 'bg-white/70 ring-mist'}`}>
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-base font-medium">
                         {formatHour(r.hora)} · {r.nombre}
                       </p>
-                      <p className="mt-0.5 text-xs text-accent">
-                        {r.servicio} · {r.duracion} · {r.telefono}
+                      <p className="mt-1 text-xs leading-relaxed text-accent">
+                        {r.servicio} · {r.duracion}
+                      </p>
+                      <p className="text-xs leading-relaxed text-accent">
+                        {r.telefono}
                         {r.instagram && ` · ${r.instagram}`}
                       </p>
                     </div>
-                    {r.sinHorario ? (
-                      <span className={`${pillBase} bg-white text-accent ring-1 ring-ink/15`}>Sin horario</span>
-                    ) : (
-                      <EstadoChips reserva={r} />
-                    )}
+                    <div className="flex shrink-0 flex-row flex-wrap gap-2 text-[11px] uppercase tracking-widest sm:items-start">
+                      <span
+                        className={`rounded-full px-3 py-1 text-white ${
+                          r.sinHorario
+                            ? 'bg-accent'
+                            : r.estado === 'confirmada'
+                              ? 'bg-green-700'
+                              : 'bg-red-600'
+                        }`}
+                      >
+                        {r.sinHorario ? 'Sin horario' : statusLabel[r.estado]}
+                      </span>
+                      <span
+                        className={`rounded-full px-3 py-1 font-medium text-white ${
+                          r.pagado === true ? 'bg-green-700' : 'bg-red-600'
+                        }`}
+                      >
+                        {r.pagado === true ? 'Pagado' : 'No pagado'}
+                      </span>
+                    </div>
                   </div>
-
-                  <div className="mt-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-3 border-t border-ink/10 pt-3 text-xs uppercase tracking-widest">
-                    <PagoToggle reserva={r} onToggle={cambiarPago} />
+                  <div className="mt-4 flex flex-wrap gap-2 border-t border-ink/10 pt-4 text-xs uppercase tracking-widest">
+                    <button
+                      type="button"
+                      onClick={() => cambiarPago(r)}
+                      className="rounded-full border border-ink/30 px-3 py-1 transition hover:bg-mist"
+                    >
+                      {r.pagado === true ? 'Marcar no pagado' : 'Marcar pagado'}
+                    </button>
                     {esEditable(r) && (
-                      <button type="button" onClick={() => setAccion({ tipo: 'editar', reserva: r })} className="underline-offset-4 hover:underline">
+                      <button
+                        type="button"
+                        onClick={() => setAccion({ tipo: 'editar', reserva: r })}
+                        className="rounded-full border border-ink/30 px-3 py-1 transition hover:bg-mist"
+                      >
                         {r.sinHorario ? 'Asignar horario' : 'Editar'}
                       </button>
                     )}
-                    <button type="button" onClick={() => liberar(r)} className="underline-offset-4 hover:underline">
+                    <button
+                      type="button"
+                      onClick={() => liberar(r)}
+                      className="rounded-full border border-ink/30 px-3 py-1 transition hover:bg-mist"
+                    >
                       Liberar
                     </button>
                   </div>
@@ -675,34 +714,35 @@ export default function AdminPanel() {
                       )}
 
                       {!almuerzo && reserva && esInicio && (
-                        <div className="flex flex-1 flex-col gap-3">
-                          <div className="flex flex-wrap items-start justify-between gap-3">
-                            <div className="min-w-0 text-sm">
-                              <p className="font-medium">{reserva.nombre}</p>
-                              {reserva.estado !== 'bloqueado' && (
-                                <p className="mt-0.5 text-xs text-accent">
-                                  {reserva.servicio} · {reserva.telefono}
-                                  {reserva.instagram && ` · ${reserva.instagram}`}
-                                </p>
-                              )}
-                              {reserva.datos && <p className="mt-1 text-xs text-ink/75">{reserva.datos}</p>}
-                            </div>
-                            <EstadoChips reserva={reserva} />
+                        <div className="flex flex-1 flex-wrap items-center justify-between gap-3">
+                          <div className="text-sm">
+                            <p className={`font-medium ${estadoTexto[reserva.estado] ?? ''}`}>
+                              {statusLabel[reserva.estado]} · {reserva.nombre}
+                            </p>
+                            {reserva.estado !== 'bloqueado' && (
+                              <p className="text-xs text-accent">
+                                {reserva.servicio} · {reserva.telefono}
+                                {reserva.instagram && ` · ${reserva.instagram}`}
+                              </p>
+                            )}
+                            {reserva.datos && <p className="mt-1 text-xs text-ink/75">{reserva.datos}</p>}
                           </div>
-                          <div className="flex flex-wrap items-center gap-2 border-t border-ink/10 pt-3">
+                          <div className="flex flex-wrap gap-2">
                             {reserva.estado === 'pendiente' && (
-                              <button type="button" onClick={() => confirmar(reserva)} className="btn-fill px-4 py-1.5 text-xs">
+                              <button type="button" onClick={() => confirmar(reserva)} className="btn-fill px-4 py-1 text-xs">
                                 Confirmar
                               </button>
                             )}
-                            {reserva.estado !== 'bloqueado' && <PagoToggle reserva={reserva} onToggle={cambiarPago} />}
-                            <button
-                              type="button"
-                              onClick={() => liberar(reserva)}
-                              className="ml-auto text-xs uppercase tracking-widest underline-offset-4 hover:underline"
-                            >
-                              {reserva.estado === 'bloqueado' ? 'Desbloquear' : 'Cancelar cita'}
-                            </button>
+                            {/* Las citas confirmadas se cancelan desde "Citas del día" (Liberar), no aquí. */}
+                            {reserva.estado !== 'confirmada' && (
+                              <button
+                                type="button"
+                                onClick={() => liberar(reserva)}
+                                className="rounded-full border border-ink/30 px-4 py-1 text-xs uppercase tracking-widest transition hover:bg-mist"
+                              >
+                                {reserva.estado === 'bloqueado' ? 'Desbloquear' : 'Cancelar cita'}
+                              </button>
+                            )}
                           </div>
                         </div>
                       )}
@@ -715,6 +755,19 @@ export default function AdminPanel() {
           )}
 
           {message && <p className="mt-4 text-sm text-accent">{message}</p>}
+
+          {avisos.map((aviso, i) => (
+            <div key={i} role="alert" className="mt-4 flex items-start justify-between gap-4 rounded-2xl bg-green-50 px-5 py-4 ring-1 ring-green-700/30">
+              <p className="text-sm text-green-800">{aviso}</p>
+              <button
+                type="button"
+                onClick={() => setAvisos((a) => a.filter((_, j) => j !== i))}
+                className="shrink-0 rounded-full border border-green-700/40 px-3 py-1 text-xs uppercase tracking-widest text-green-800 transition hover:bg-green-100"
+              >
+                Entendido
+              </button>
+            </div>
+          ))}
         </div>
       </div>
 
