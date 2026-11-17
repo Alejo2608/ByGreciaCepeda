@@ -1,5 +1,33 @@
 import { useMemo, useState } from 'react';
 import { addDays, formatFecha, formatHour } from '../lib/schedule';
+import { lashServices, browServices, microBrows, makeupServices } from '../data/services';
+import { courses } from '../data/courses';
+
+// Categoría de una cita según el servicio que se agendó.
+const categorias = [
+  ...lashServices.map((s) => [s.name, 'Pestañas']),
+  ...browServices.map((s) => [s.name, 'Cejas']),
+  ...microBrows.map((s) => [s.name, 'Micro brows']),
+  ...makeupServices.map((s) => [s.name, 'Maquillaje']),
+  ...courses.map((c) => [c.name, 'Cursos']),
+];
+const ORDEN = ['Pestañas', 'Cejas', 'Micro brows', 'Maquillaje', 'Cursos', 'Otros'];
+
+function categoriaDe(servicio) {
+  return categorias.find(([nombre]) => nombre === servicio)?.[1] ?? 'Otros';
+}
+
+// Resumen por categoría: "3 pestañas · 2 cejas · 1 maquillaje".
+function resumenCategorias(citas) {
+  const cuenta = {};
+  citas.forEach((r) => {
+    const c = categoriaDe(r.servicio);
+    cuenta[c] = (cuenta[c] || 0) + 1;
+  });
+  return ORDEN.filter((c) => cuenta[c])
+    .map((c) => `${cuenta[c]} ${c.toLowerCase()}`)
+    .join(' · ');
+}
 
 // Nombre del mes en español, con mayúscula inicial: "2026-11" → "Noviembre 2026".
 function nombreMes(mes) {
@@ -90,7 +118,12 @@ export default function Historial({ archivo }) {
             <Cabecera
               clave={claveMes}
               titulo={nombreMes(mes.mes)}
-              detalle={contar(mes.total, 'cita', 'citas')}
+              detalle={
+                <>
+                  {contar(mes.total, 'cita', 'citas')}
+                  <span className="normal-case tracking-normal"> ({resumenCategorias(mes.semanas.flatMap((s) => s.dias.flatMap((d) => d.lista)))})</span>
+                </>
+              }
               className="px-5 py-4 text-xl"
             />
 
@@ -103,7 +136,12 @@ export default function Historial({ archivo }) {
                       <Cabecera
                         clave={claveSemana}
                         titulo={`Semana del ${formatFecha(semana.lunes)}`}
-                        detalle={contar(semana.total, 'cita', 'citas')}
+                        detalle={
+                          <>
+                            {contar(semana.total, 'cita', 'citas')}
+                            <span className="normal-case tracking-normal"> ({resumenCategorias(semana.dias.flatMap((d) => d.lista))})</span>
+                          </>
+                        }
                         className="px-4 py-3 text-lg"
                       />
 
