@@ -4,7 +4,7 @@ import { app, db } from './firebase';
 
 // Clave pública VAPID de Firebase (Cloud Messaging → Web Push). No es secreta.
 // Se copia desde Firebase Console → Configuración del proyecto → Cloud Messaging.
-export const VAPID_KEY = 'PEGAR_AQUI_LA_CLAVE_VAPID';
+export const VAPID_KEY = 'BNkb3H9qiUDbXWMccthaQlwlZ45W_jVC7m9Ao7pSu_ZtLLkKAr9CJqWWQ2FI4in8n9vUw1HbBY_sXaljPhPCuic';
 
 // Pide permiso, registra el dispositivo y guarda su token para que la función le envíe los avisos.
 export async function activarNotificaciones(email) {
