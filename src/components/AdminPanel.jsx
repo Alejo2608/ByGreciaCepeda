@@ -33,7 +33,7 @@ import Historial from './Historial';
 import Deudoras from './Deudoras';
 import PorConfirmar from './PorConfirmar';
 import { activarNotificaciones, notificacionesDisponibles } from '../lib/notificaciones';
-import { enlaceWhatsAppClienta, mensajeRecordatorio } from '../lib/recordatorio';
+import { enlaceWhatsAppClienta, mensajePagoPendiente, mensajeRecordatorio } from '../lib/recordatorio';
 import ConfirmDialog from './ConfirmDialog';
 import AdminModal from './AdminModal';
 import AgendarClienta from './AgendarClienta';
@@ -439,6 +439,18 @@ export default function AdminPanel() {
   const recordarCita = (r) => {
     const texto = mensajeRecordatorio(r);
     const enlace = enlaceWhatsAppClienta(r.telefono, texto);
+    if (enlace) {
+      window.open(enlace, '_blank', 'noopener');
+    } else {
+      setCopiado(false);
+      setRecordatorioSinTelefono({ texto });
+    }
+  };
+
+  // Recordatorio de pago de una clienta: mismo criterio que Recordar cita.
+  const recordarPago = (clienta) => {
+    const texto = mensajePagoPendiente(clienta.nombre, clienta.citas, clienta.total);
+    const enlace = enlaceWhatsAppClienta(clienta.telefono, texto);
     if (enlace) {
       window.open(enlace, '_blank', 'noopener');
     } else {
@@ -1016,7 +1028,7 @@ export default function AdminPanel() {
         </div>
       )}
 
-      {pestana === 'cobrar' && <Deudoras reservas={reservas} onPagar={cambiarPago} />}
+      {pestana === 'cobrar' && <Deudoras reservas={reservas} onPagar={cambiarPago} onRecordar={recordarPago} />}
 
       {pestana === 'confirmar' && <PorConfirmar reservas={reservas} onConfirmar={confirmar} onLiberar={liberar} />}
 

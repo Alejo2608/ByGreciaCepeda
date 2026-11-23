@@ -26,6 +26,22 @@ export function mensajeRecordatorio(r) {
   ].join('\n');
 }
 
+// Texto para recordar el pago de las citas ya atendidas que todavía no se han pagado.
+export function mensajePagoPendiente(nombre, citas, total) {
+  const lineas = citas.map((c) => `• ${formatFecha(c.fecha)}: ${c.servicio} (${c.precio})`);
+  return [
+    `¡Hola, ${nombre}! 🤍`,
+    '',
+    'Te escribe Grecia Cepeda para recordarte que tienes pendiente el pago de:',
+    '',
+    ...lineas,
+    '',
+    `Total pendiente: ${total} USD`,
+    '',
+    'Si ya realizaste el pago, por favor envíame el comprobante por aquí. ¡Muchas gracias! ✨',
+  ].join('\n');
+}
+
 // Enlace de WhatsApp directo a la clienta. Convierte un número venezolano (04XX…) al formato internacional (58…).
 export function enlaceWhatsAppClienta(telefono, texto) {
   let digitos = String(telefono || '').replace(/\D/g, '');
