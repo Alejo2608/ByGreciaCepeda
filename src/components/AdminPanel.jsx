@@ -349,6 +349,20 @@ export default function AdminPanel() {
     [reservas, fecha],
   );
 
+  // Si el panel se abre desde una notificación (#admin?fecha=AAAA-MM-DD), muestra ese día en la agenda.
+  useEffect(() => {
+    const leerFecha = () => {
+      const m = window.location.hash.match(/fecha=(\d{4}-\d{2}-\d{2})/);
+      if (m) {
+        setFecha(m[1]);
+        setPestana('agenda');
+      }
+    };
+    leerFecha();
+    window.addEventListener('hashchange', leerFecha);
+    return () => window.removeEventListener('hashchange', leerFecha);
+  }, []);
+
   // Clientas ya atendidas, para la sección de días anteriores.
   useEffect(() => {
     if (!isAdmin) return undefined;

@@ -30,7 +30,7 @@ export default function App() {
   // Al refrescar, no volver a bajar a una sección de la portada: se quita el ancla y la página empieza arriba.
   useEffect(() => {
     const current = window.location.hash;
-    const isHomeAnchor = current && current !== '#admin' && !categories.some((c) => `#${c.id}` === current);
+    const isHomeAnchor = current && !current.startsWith('#admin') && !categories.some((c) => `#${c.id}` === current);
     if (isHomeAnchor) {
       history.replaceState(null, '', window.location.pathname + window.location.search);
       window.scrollTo(0, 0);
@@ -51,7 +51,7 @@ export default function App() {
     <>
       <Navbar />
       <main>
-        {hash === '#admin' ? (
+        {hash.startsWith('#admin') ? (
           <AdminPanel />
         ) : page ? (
           <CategoryPage category={page} />

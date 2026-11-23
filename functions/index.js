@@ -7,6 +7,7 @@ const { getMessaging } = require('firebase-admin/messaging');
 
 initializeApp();
 
+// Al tocar la notificación se abre el panel directamente en el día de la solicitud.
 const SITIO = 'https://bygreciacepeda.site/#admin';
 
 exports.avisoNuevaSolicitud = onDocumentCreated('reservas/{reservaId}', async (event) => {
@@ -24,7 +25,7 @@ exports.avisoNuevaSolicitud = onDocumentCreated('reservas/{reservaId}', async (e
       title: 'Nueva solicitud de cita',
       body: `${r.nombre} · ${r.servicio} · ${r.fecha} ${r.hora}`,
     },
-    webpush: { fcmOptions: { link: SITIO } },
+    webpush: { fcmOptions: { link: `${SITIO}?fecha=${r.fecha}` } },
   });
 
   // Limpia los dispositivos que ya no aceptan notificaciones (permiso revocado, navegador borrado).
