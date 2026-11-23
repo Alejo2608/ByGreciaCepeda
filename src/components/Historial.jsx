@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { addDays, formatFecha, formatHour } from '../lib/schedule';
+import { addDays, formatFecha, formatHour, todayISO } from '../lib/schedule';
 import { lashServices, browServices, microBrows, makeupServices } from '../data/services';
 import { courses } from '../data/courses';
 
@@ -51,7 +51,7 @@ const contar = (n, singular, plural) => `${n} ${n === 1 ? singular : plural}`;
 
 // Historial de clientas atendidas: mes → semana → día → citas.
 // Las citas solo se dibujan al abrir un día, así la lista sigue ligera aunque haya cientos de clientas.
-export default function Historial({ archivo }) {
+export default function Historial({ archivo, onRestaurar }) {
   const [abiertos, setAbiertos] = useState({});
   const alternar = (clave) => setAbiertos((s) => ({ ...s, [clave]: !s[clave] }));
 
@@ -177,13 +177,25 @@ export default function Historial({ archivo }) {
                                             {r.instagram && ` · ${r.instagram}`}
                                           </p>
                                         </div>
-                                        <span
-                                          className={`rounded-full px-3 py-1 text-xs uppercase tracking-widest text-white ${
-                                            r.pagado === true ? 'bg-green-700' : 'bg-red-600'
-                                          }`}
-                                        >
-                                          {r.pagado === true ? 'Pagado' : 'No pagado'}
-                                        </span>
+                                        <div className="flex items-center gap-2">
+                                          {/* Citas de hoy o futuras archivadas por error: se pueden devolver a la agenda. */}
+                                          {r.fecha >= todayISO() && onRestaurar && (
+                                            <button
+                                              type="button"
+                                              onClick={() => onRestaurar(r)}
+                                              className="rounded-full border border-ink/30 px-3 py-1 text-xs uppercase tracking-widest transition hover:bg-mist"
+                                            >
+                                              Restaurar
+                                            </button>
+                                          )}
+                                          <span
+                                            className={`rounded-full px-3 py-1 text-xs uppercase tracking-widest text-white ${
+                                              r.pagado === true ? 'bg-green-700' : 'bg-red-600'
+                                            }`}
+                                          >
+                                            {r.pagado === true ? 'Pagado' : 'No pagado'}
+                                          </span>
+                                        </div>
                                       </li>
                                     ))}
                                   </ul>

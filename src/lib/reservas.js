@@ -108,6 +108,26 @@ export async function archivarDia(reservasDia) {
   await batch.commit();
 }
 
+// Devuelve a la agenda una cita del archivo, con sus mismos datos y sus mismas horas.
+// Si alguna de esas horas ya la tomó otra cita, lanza 'ocupado' y no cambia nada.
+export async function restaurarCita(cita) {
+  const { id, archivadoEn, ...datos } = cita;
+  void archivadoEn;
+  const slotIds = datos.slots ?? [];
+  await runTransaction(db, async (tx) => {
+    for (const slotId of slotIds) {
+      const slot = await tx.get(doc(db, 'slots', slotId));
+      if (slot.exists() && slot.data().reservaId !== id) throw new Error('ocupado');
+    }
+    tx.set(doc(db, 'reservas', id), datos);
+    slotIds.forEach((slotId) => {
+      const [f, h] = slotId.split('_');
+      tx.set(doc(db, 'slots', slotId), { fecha: f, hora: h, reservaId: id });
+    });
+    tx.delete(doc(db, 'archivo', id));
+  });
+}
+
 // Cambia el servicio (y su precio y duración) de una cita, conservando fecha y hora.
 export function editReserva(reserva, servicio) {
   const cambios = { servicio: servicio.name, precio: servicio.price, duracion: servicio.duration };

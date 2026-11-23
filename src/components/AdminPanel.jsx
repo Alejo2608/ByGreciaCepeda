@@ -299,6 +299,7 @@ function EditList({ reserva, selected, onPick }) {
 export default function AdminPanel() {
   const [user, setUser] = useState(undefined);
   const [reservas, setReservas] = useState([]);
+  const [reservasDelServidor, setReservasDelServidor] = useState(false); // true solo con la lista completa del servidor
   const [fecha, setFecha] = useState(todayISO());
   const [grupoSel, setGrupoSel] = useState('manana'); // grupo elegido en la lista de bloqueo
   const [bloqueo, setBloqueo] = useState(null); // grupo por confirmar: 'manana' | 'tarde' | 'dia'
@@ -337,8 +338,11 @@ export default function AdminPanel() {
 
   useEffect(() => {
     if (!isAdmin) return undefined;
-    return onSnapshot(collection(db, 'reservas'), (snap) => {
+    // includeMetadataChanges: avisa también cuando el servidor confirma la lista, para saber si viene completa.
+    setReservasDelServidor(false);
+    return onSnapshot(collection(db, 'reservas'), { includeMetadataChanges: true }, (snap) => {
       setReservas(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+      setReservasDelServidor(!snap.metadata.fromCache && !snap.metadata.hasPendingWrites);
     });
   }, [isAdmin, reconexion]);
 
@@ -496,9 +500,11 @@ export default function AdminPanel() {
     });
   }, [isAdmin, reconexion]);
 
-  // Días ya llegados (hoy o antes) en los que todas las citas están pagadas: se archivan solos y se avisa a Grecia.
+  // Días que YA TERMINARON (antes de hoy) en los que todas las citas están pagadas: se archivan solos y se avisa a Grecia.
+  // Nunca se archiva el día de hoy (las citas pagadas por adelantado todavía no se atendieron), y solo se decide con
+  // la lista completa del servidor: una lista parcial de la memoria del celular podría parecer "todo pagado" sin serlo.
   useEffect(() => {
-    if (!isAdmin) return;
+    if (!isAdmin || !reservasDelServidor) return;
     const grupos = {};
     reservas
       .filter((r) => r.estado !== 'bloqueado')
@@ -506,7 +512,7 @@ export default function AdminPanel() {
         (grupos[r.fecha] ??= []).push(r);
       });
     const pagados = Object.keys(grupos).filter(
-      (f) => f <= todayISO() && grupos[f].every((r) => r.pagado === true),
+      (f) => f < todayISO() && grupos[f].every((r) => r.estado === 'confirmada' && r.pagado === true),
     );
     // Si un día deja de estar pagado (p. ej. una cita nueva), se puede volver a archivar más adelante.
     archivando.current.forEach((f) => {
@@ -528,7 +534,7 @@ export default function AdminPanel() {
           setMessage('No se pudo archivar el día. Se intentará de nuevo.');
         });
     });
-  }, [reservas, isAdmin]);
+  }, [reservas, isAdmin, reservasDelServidor]);
 
   if (user === undefined) return <p className="px-6 py-40 text-center text-sm text-accent">Cargando…</p>;
 
