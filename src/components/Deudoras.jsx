@@ -104,7 +104,7 @@ export default function Deudoras({ reservas, onPagar, onRecordar }) {
                     <button
                       type="button"
                       onClick={() => onRecordar({ ...c, citas: [r], total: montoDe(r.precio) })}
-                      className="rounded-full border border-ink/30 px-3 py-1.5 text-xs normal-case tracking-normal transition hover:bg-mist"
+                      className="rounded-full border border-ink/30 px-3 py-1.5 text-xs uppercase tracking-widest transition hover:bg-mist"
                     >
                       Recordar pago
                     </button>
