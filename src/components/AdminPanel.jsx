@@ -304,6 +304,7 @@ export default function AdminPanel() {
   const [swapPending, setSwapPending] = useState(null); // { a, b } por confirmar
   const [avisos, setAvisos] = useState([]); // avisos de días archivados, hasta que Grecia los cierre
   const [archivo, setArchivo] = useState([]); // clientas ya atendidas (colección archivo)
+  const [pestana, setPestana] = useState('agenda'); // sección visible: 'agenda' | 'historial'
   const archivando = useRef(new Set()); // días que se están archivando (evita repetir)
 
   const isAdmin = Boolean(user && user.email === ADMIN_EMAIL && user.emailVerified);
@@ -559,6 +560,26 @@ export default function AdminPanel() {
         </button>
       </div>
 
+      <nav aria-label="Secciones del panel" className="mt-8 flex gap-2 border-b border-ink/10 pb-3 text-xs uppercase tracking-widest">
+        {[
+          ['agenda', 'Agenda'],
+          ['historial', 'Historial'],
+        ].map(([id, texto]) => (
+          <button
+            key={id}
+            type="button"
+            aria-current={pestana === id ? 'page' : undefined}
+            onClick={() => setPestana(id)}
+            className={`rounded-full px-5 py-2 transition ${
+              pestana === id ? 'bg-ink text-paper' : 'text-accent hover:bg-mist'
+            }`}
+          >
+            {texto}
+          </button>
+        ))}
+      </nav>
+
+      {pestana === 'agenda' && (
       <div className="mt-10 grid gap-8 md:grid-cols-[1.1fr_1fr]">
         <div>
           <Calendar value={fecha} onChange={setFecha} counts={counts} size="large" />
@@ -771,6 +792,7 @@ export default function AdminPanel() {
 
         </div>
       </div>
+      )}
 
       {/* Aviso flotante: se queda en pantalla hasta que Grecia lo cierre, aunque esté lejos de la lista. */}
       {avisos.length > 0 && (
@@ -791,21 +813,14 @@ export default function AdminPanel() {
         </div>
       )}
 
-      {isAdmin && (
-        <section className="mt-16 border-t border-ink/10 pt-12">
-          <details className="group">
-            <summary className="flex cursor-pointer list-none items-center justify-between gap-4 pb-2">
-              <span>
-                <span className="block text-xs uppercase tracking-[0.35em] text-accent">Historial</span>
-                <span className="mt-2 block font-serif text-3xl">Clientas ya atendidas</span>
-              </span>
-              <span className="flex items-center gap-3 text-xs uppercase tracking-widest text-accent">
-                {archivo.length} {archivo.length === 1 ? 'cita' : 'citas'}
-                <span aria-hidden="true" className="text-base transition group-open:rotate-180">⌄</span>
-              </span>
-            </summary>
-            <Historial archivo={archivo} />
-          </details>
+      {pestana === 'historial' && (
+        <section className="mt-10">
+          <p className="text-xs uppercase tracking-[0.35em] text-accent">Historial</p>
+          <h2 className="mt-2 font-serif text-3xl">Clientas ya atendidas</h2>
+          <p className="mt-2 text-xs uppercase tracking-widest text-accent">
+            {archivo.length} {archivo.length === 1 ? 'cita archivada' : 'citas archivadas'}
+          </p>
+          <Historial archivo={archivo} />
         </section>
       )}
 
