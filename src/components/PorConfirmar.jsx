@@ -47,9 +47,6 @@ export default function PorConfirmar({ reservas, onConfirmar, onLiberar }) {
                     </p>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="rounded-full bg-red-600 px-3 py-1 text-xs uppercase tracking-widest text-white">
-                      Por confirmar
-                    </span>
                     <button
                       type="button"
                       onClick={() => onConfirmar(r)}
