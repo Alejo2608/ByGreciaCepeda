@@ -25,7 +25,7 @@ function ResumenCategorias({ citas }) {
     cuenta[c] = (cuenta[c] || 0) + 1;
   });
   return (
-    <span className="flex flex-wrap gap-1.5 normal-case tracking-normal">
+    <span className="flex flex-nowrap gap-1.5 overflow-x-auto normal-case tracking-normal [scrollbar-width:none] sm:flex-wrap sm:overflow-visible">
       {ORDEN.filter((c) => cuenta[c]).map((c) => (
         <span key={c} className="rounded-full bg-mist px-2.5 py-0.5 text-xs text-ink/80">
           <span className="font-medium text-ink">{cuenta[c]}</span> {c}
@@ -95,22 +95,26 @@ export default function Historial({ archivo }) {
   }
 
   // Encabezado desplegable reutilizable para cada nivel.
-  const Cabecera = ({ clave, titulo, detalle, className }) => {
+  // Fila de un nivel: título y total en una línea; el resumen por categoría (pie) va debajo, en una sola línea.
+  const Cabecera = ({ clave, titulo, detalle, pie, className }) => {
     const abierto = Boolean(abiertos[clave]);
     return (
       <button
         type="button"
         aria-expanded={abierto}
         onClick={() => alternar(clave)}
-        className={`flex w-full items-center justify-between gap-4 text-left ${className}`}
+        className={`flex w-full flex-col gap-2 text-left ${className}`}
       >
-        <span className="font-serif">{titulo}</span>
-        <span className="flex items-center gap-3 text-sm uppercase tracking-widest text-accent">
-          {detalle}
-          <span aria-hidden="true" className={`text-base transition ${abierto ? 'rotate-180' : ''}`}>
-            ⌄
+        <span className="flex w-full items-center justify-between gap-3">
+          <span className="min-w-0 font-serif">{titulo}</span>
+          <span className="flex shrink-0 items-center gap-2 text-xs uppercase tracking-widest text-accent sm:gap-3 sm:text-sm">
+            {detalle}
+            <span aria-hidden="true" className={`text-base transition ${abierto ? 'rotate-180' : ''}`}>
+              ⌄
+            </span>
           </span>
         </span>
+        {pie}
       </button>
     );
   };
@@ -124,12 +128,8 @@ export default function Historial({ archivo }) {
             <Cabecera
               clave={claveMes}
               titulo={nombreMes(mes.mes)}
-              detalle={
-                <span className="flex flex-col items-end gap-2">
-                  <span>{contar(mes.total, 'cita', 'citas')}</span>
-                  <ResumenCategorias citas={mes.semanas.flatMap((s) => s.dias.flatMap((d) => d.lista))} />
-                </span>
-              }
+              detalle={contar(mes.total, 'cita', 'citas')}
+              pie={<ResumenCategorias citas={mes.semanas.flatMap((s) => s.dias.flatMap((d) => d.lista))} />}
               className="px-5 py-4 text-xl"
             />
 
@@ -142,12 +142,8 @@ export default function Historial({ archivo }) {
                       <Cabecera
                         clave={claveSemana}
                         titulo={`Semana del ${formatFecha(semana.lunes)}`}
-                        detalle={
-                          <span className="flex flex-col items-end gap-2">
-                            <span>{contar(semana.total, 'cita', 'citas')}</span>
-                            <ResumenCategorias citas={semana.dias.flatMap((d) => d.lista)} />
-                          </span>
-                        }
+                        detalle={contar(semana.total, 'cita', 'citas')}
+                        pie={<ResumenCategorias citas={semana.dias.flatMap((d) => d.lista)} />}
                         className="px-4 py-3 text-lg"
                       />
 
