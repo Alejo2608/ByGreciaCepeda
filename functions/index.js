@@ -85,8 +85,9 @@ exports.recordatorioDiario = onSchedule(
     // Si mañana no hay citas, no se envía nada.
     if (citas.length === 0) return;
 
-    // Una cita por línea: "8:00 AM · Wilmary · Tecnológicas Three Core".
-    const lineas = citas.map((c) => `${hora12(c.hora)} · ${c.nombre} · ${c.servicio}`);
+    // Una cita por línea: "8:00 AM · Wilmary caldera". Si el nombre es muy largo se corta con "…" para que no se parta.
+    const cortar = (texto, max) => (texto.length > max ? `${texto.slice(0, max - 1).trimEnd()}…` : texto);
+    const lineas = citas.map((c) => `${hora12(c.hora)} · ${cortar(c.nombre, 24)}`);
     const pendientes = citas.filter((c) => c.estado === 'pendiente').length;
     if (pendientes > 0) lineas.push(`Por confirmar: ${pendientes}`);
     const titulo = `Mañana tienes ${citas.length} ${citas.length === 1 ? 'cita' : 'citas'}`;
