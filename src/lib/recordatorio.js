@@ -3,16 +3,19 @@ import { addDays, formatFecha, formatHour, todayISO } from './schedule';
 // Texto del recordatorio que se le envía a la clienta.
 export function mensajeRecordatorio(r) {
   const cuando = r.fecha === addDays(todayISO(), 1) ? 'para mañana' : `para el ${formatFecha(r.fecha)}`;
-  const pago = r.pagado === true ? 'Pagado. ¡Muchas gracias!' : 'Aún no se ha pagado.';
+  const pago = r.pagado === true ? 'Pagado. ¡Muchas gracias!' : 'Aún no se ha pagado';
   return [
-    `Hola ${r.nombre}, le recordamos que tiene una cita ${cuando}:`,
+    `¡Hola, ${r.nombre}! 🤍`,
     '',
-    `Servicio: ${r.servicio}`,
-    `Hora: ${formatHour(r.hora)}`,
-    `Pago: ${pago}`,
+    `Te escribe Grecia Cepeda para recordarte tu cita ${cuando}.`,
     '',
-    'Por favor responda este mensaje para confirmar su cita. ¡Le esperamos!',
+    `💅 Servicio: ${r.servicio}`,
+    `🕒 Hora: ${formatHour(r.hora)}`,
+    `💳 Pago: ${pago}`,
     '',
+    'Para confirmar tu lugar, por favor responde a este mensaje. Si necesitas cambiar la hora, también puedes escribirme por aquí.',
+    '',
+    '¡Te espero con mucho cariño! ✨',
     'Grecia Cepeda',
   ].join('\n');
 }
