@@ -424,7 +424,10 @@ export default function AdminPanel() {
   if (!isAdmin) {
     return (
       <section className="mx-auto max-w-md px-6 py-40 text-center">
-        <h1 className="font-serif text-3xl">Panel de citas</h1>
+        <div className="min-w-0">
+          <p className="text-[10px] uppercase tracking-[0.35em] text-accent sm:text-xs">Grecia Cepeda</p>
+          <h1 className="mt-1 whitespace-nowrap font-serif text-3xl sm:text-4xl">Panel de citas</h1>
+        </div>
         {user ? (
           <>
             <p className="mt-4 text-sm text-accent">Esta cuenta no tiene acceso.</p>
@@ -585,7 +588,10 @@ export default function AdminPanel() {
   return (
     <section className="mx-auto w-full min-w-0 max-w-5xl px-4 py-32">
       <div className="flex items-center justify-between">
-        <h1 className="font-serif text-3xl">Panel de citas</h1>
+        <div className="min-w-0">
+          <p className="text-[10px] uppercase tracking-[0.35em] text-accent sm:text-xs">Grecia Cepeda</p>
+          <h1 className="mt-1 whitespace-nowrap font-serif text-3xl sm:text-4xl">Panel de citas</h1>
+        </div>
         <div className="flex items-center gap-5">
           {notificacionesDisponibles() && (
             <button
