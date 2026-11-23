@@ -31,6 +31,7 @@ import {
 import Calendar from './Calendar';
 import Historial from './Historial';
 import Deudoras from './Deudoras';
+import PorConfirmar from './PorConfirmar';
 import { activarNotificaciones, notificacionesDisponibles } from '../lib/notificaciones';
 import ConfirmDialog from './ConfirmDialog';
 import AdminModal from './AdminModal';
@@ -707,11 +708,12 @@ export default function AdminPanel() {
         onActivar={activarAvisos}
       />
 
-      <nav aria-label="Secciones del panel" className="mt-8 flex gap-2 border-b border-ink/10 pb-3 text-xs uppercase tracking-widest">
+      <nav aria-label="Secciones del panel" className="mt-8 flex gap-1.5 overflow-x-auto border-b border-ink/10 pb-3 text-xs uppercase tracking-widest sm:gap-2">
         {[
           ['agenda', 'Agenda'],
           ['historial', 'Historial'],
           ['cobrar', 'Por cobrar'],
+          ['confirmar', 'Por confirmar'],
         ].map(([id, texto]) => (
           <button
             key={id}
@@ -990,6 +992,8 @@ export default function AdminPanel() {
       )}
 
       {pestana === 'cobrar' && <Deudoras reservas={reservas} onPagar={cambiarPago} />}
+
+      {pestana === 'confirmar' && <PorConfirmar reservas={reservas} onConfirmar={confirmar} />}
 
       {pestana === 'historial' && (
         <section className="mt-10">
