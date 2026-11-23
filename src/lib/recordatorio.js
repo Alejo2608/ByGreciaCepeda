@@ -28,17 +28,22 @@ export function mensajeRecordatorio(r) {
 
 // Texto para recordar el pago de las citas ya atendidas que todavía no se han pagado.
 export function mensajePagoPendiente(nombre, citas, total) {
-  const lineas = citas.map((c) => `• ${formatFecha(c.fecha)}: ${c.servicio} (${c.precio})`);
+  // Cada cita en su bloque: servicio, fecha y precio.
+  const bloques = citas.map((c) =>
+    [`👁️ Servicio: ${c.servicio}`, `📅 Fecha: ${formatFecha(c.fecha)}`, `💵 Precio: ${c.precio}`].join('\n'),
+  );
   return [
     `¡Hola, ${nombre}! 🤍`,
     '',
-    'Te escribe Grecia Cepeda para recordarte que tienes pendiente el pago de:',
+    'Te escribe Grecia Cepeda para recordarte que tienes pagos pendientes:',
     '',
-    ...lineas,
+    bloques.join('\n\n'),
     '',
-    `Total pendiente: ${total} USD`,
+    `Pendiente: ${total} USD`,
     '',
     'Si ya realizaste el pago, por favor envíame el comprobante por aquí. ¡Muchas gracias! ✨',
+    '',
+    'Si aún no lo has hecho, avísame y te comparto los datos para realizar el pago.',
   ].join('\n');
 }
 
