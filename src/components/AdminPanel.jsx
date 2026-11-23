@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { GoogleAuthProvider, onAuthStateChanged, signInWithPopup, signOut } from 'firebase/auth';
-import { collection, doc, getDocs, limit, onSnapshot, orderBy, query, updateDoc, where, writeBatch } from 'firebase/firestore';
+import { collection, deleteDoc, doc, getDocs, limit, onSnapshot, orderBy, query, updateDoc, where, writeBatch } from 'firebase/firestore';
 import Campana from './Campana';
 import { auth, db } from '../lib/firebase';
 import { esAdmin } from '../lib/admin';
@@ -398,13 +398,46 @@ export default function AdminPanel() {
   }, [isAdmin, user]);
 
   // Notificaciones guardadas (solicitudes nuevas y recordatorios diarios), las más recientes primero.
+  // Las de más de 24 horas se borran solas.
+  const VIGENCIA_MS = 24 * 60 * 60 * 1000;
+  const [ahora, setAhora] = useState(() => Date.now());
+  useEffect(() => {
+    const tic = setInterval(() => setAhora(Date.now()), 60 * 1000);
+    return () => clearInterval(tic);
+  }, []);
+
   useEffect(() => {
     if (!isAdmin) return undefined;
     const consulta = query(collection(db, 'notificaciones'), orderBy('creado', 'desc'), limit(50));
     return onSnapshot(consulta, (snap) => {
-      setNotificaciones(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+      const limite = Date.now() - VIGENCIA_MS;
+      const vigentes = [];
+      snap.docs.forEach((d) => {
+        const creado = d.data().creado?.toMillis?.() ?? Date.now();
+        if (creado < limite) {
+          deleteDoc(d.ref).catch(() => {});
+        } else {
+          vigentes.push({ id: d.id, ...d.data() });
+        }
+      });
+      setNotificaciones(vigentes);
     });
   }, [isAdmin, reconexion]);
+
+  // Lo que se muestra en la campana: solo lo de las últimas 24 horas.
+  const avisosVisibles = useMemo(
+    () => notificaciones.filter((a) => (a.creado?.toMillis?.() ?? ahora) >= ahora - VIGENCIA_MS),
+    [notificaciones, ahora],
+  );
+
+  // Quita una notificación de la campana.
+  const eliminarAviso = async (a) => {
+    try {
+      await deleteDoc(doc(db, 'notificaciones', a.id));
+    } catch {
+      setMessage('No se pudo eliminar la notificación.');
+    }
+  };
 
   // Al abrir la campana se marcan como leídas.
   const marcarAvisosLeidos = async () => {
@@ -665,9 +698,10 @@ export default function AdminPanel() {
 
       {/* Campana: solicitudes nuevas y recordatorios del día siguiente. */}
       <Campana
-        avisos={notificaciones}
+        avisos={avisosVisibles}
         onIr={irAAviso}
         onAbrir={marcarAvisosLeidos}
+        onEliminar={eliminarAviso}
         mostrarActivar={notificacionesDisponibles() && notifEstado !== 'activas'}
         activando={notifEstado === 'activando'}
         onActivar={activarAvisos}

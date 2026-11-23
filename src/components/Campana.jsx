@@ -3,7 +3,7 @@ import { formatFecha, formatHour } from '../lib/schedule';
 
 // Campana del panel: lista de avisos (solicitudes nuevas y recordatorios del día siguiente).
 // Al abrirla se marcan como leídos; al tocar un aviso, el panel va a ese día en la agenda.
-export default function Campana({ avisos, onIr, onAbrir, mostrarActivar, activando, onActivar }) {
+export default function Campana({ avisos, onIr, onAbrir, onEliminar, mostrarActivar, activando, onActivar }) {
   const [abierta, setAbierta] = useState(false);
   const sinLeer = avisos.filter((a) => !a.leida).length;
 
@@ -50,14 +50,14 @@ export default function Campana({ avisos, onIr, onAbrir, mostrarActivar, activan
           ) : (
             <ul className="max-h-96 space-y-1 overflow-y-auto">
               {avisos.map((a) => (
-                <li key={a.id}>
+                <li key={a.id} className="relative">
                   <button
                     type="button"
                     onClick={() => {
                       setAbierta(false);
                       onIr(a);
                     }}
-                    className={`w-full rounded-xl px-3 py-2.5 text-left transition hover:bg-mist ${a.leida ? '' : 'bg-white/70'}`}
+                    className={`w-full rounded-xl py-2.5 pl-3 pr-9 text-left transition hover:bg-mist ${a.leida ? '' : 'bg-white/70'}`}
                   >
                     <span className="block text-[10px] uppercase tracking-widest text-accent">
                       {a.tipo === 'recordatorio' ? 'Recordatorio de mañana' : 'Nueva solicitud'}
@@ -66,6 +66,14 @@ export default function Campana({ avisos, onIr, onAbrir, mostrarActivar, activan
                     <span className="mt-1 block whitespace-pre-line text-xs leading-relaxed text-accent">
                       {a.texto || `${formatFecha(a.fecha)}${a.hora ? ` · ${formatHour(a.hora)}` : ''}`}
                     </span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onEliminar(a)}
+                    aria-label="Eliminar notificación"
+                    className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full text-sm text-accent transition hover:bg-mist hover:text-ink"
+                  >
+                    ×
                   </button>
                 </li>
               ))}
