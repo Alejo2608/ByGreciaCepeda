@@ -33,6 +33,7 @@ import Historial from './Historial';
 import Deudoras from './Deudoras';
 import PorConfirmar from './PorConfirmar';
 import { activarNotificaciones, notificacionesDisponibles } from '../lib/notificaciones';
+import { enlaceWhatsAppClienta, mensajeRecordatorio } from '../lib/recordatorio';
 import ConfirmDialog from './ConfirmDialog';
 import AdminModal from './AdminModal';
 import AgendarClienta from './AgendarClienta';
@@ -311,6 +312,8 @@ export default function AdminPanel() {
   const [pestana, setPestana] = useState('agenda'); // sección visible: 'agenda' | 'historial'
   const [notifEstado, setNotifEstado] = useState('inactivas'); // avisos push: inactivas | activando | activas | bloqueadas | error
   const [notificaciones, setNotificaciones] = useState([]); // avisos de la campana (solicitudes y recordatorios)
+  const [recordatorioSinTelefono, setRecordatorioSinTelefono] = useState(null); // { texto } cuando la cita no tiene teléfono
+  const [copiado, setCopiado] = useState(false);
   const [preguntarAvisos, setPreguntarAvisos] = useState(false); // pregunta única para activar los avisos
   const archivando = useRef(new Set()); // días que se están archivando (evita repetir)
 
@@ -430,6 +433,19 @@ export default function AdminPanel() {
     () => notificaciones.filter((a) => (a.creado?.toMillis?.() ?? ahora) >= ahora - VIGENCIA_MS),
     [notificaciones, ahora],
   );
+
+  // Recordatorio de cita: con teléfono abre el chat de WhatsApp con el mensaje listo;
+  // sin teléfono muestra el texto para copiarlo y enviarlo a mano.
+  const recordarCita = (r) => {
+    const texto = mensajeRecordatorio(r);
+    const enlace = enlaceWhatsAppClienta(r.telefono, texto);
+    if (enlace) {
+      window.open(enlace, '_blank', 'noopener');
+    } else {
+      setCopiado(false);
+      setRecordatorioSinTelefono({ texto });
+    }
+  };
 
   // Quita una notificación de la campana.
   const eliminarAviso = async (a) => {
@@ -786,6 +802,15 @@ export default function AdminPanel() {
                     </div>
                   </div>
                   <div className="mt-4 flex flex-nowrap gap-1.5 border-t border-ink/10 pt-4 text-[11px] uppercase tracking-wider [&>button]:flex-1 [&>button]:whitespace-nowrap [&>button]:px-2 sm:gap-2 sm:text-xs sm:[&>button]:flex-none sm:[&>button]:px-3">
+                    {!r.sinHorario && r.estado !== 'bloqueado' && (
+                      <button
+                        type="button"
+                        onClick={() => recordarCita(r)}
+                        className="rounded-full border border-ink/30 px-3 py-1 text-xs normal-case tracking-normal transition hover:bg-mist"
+                      >
+                        Recordar
+                      </button>
+                    )}
                     {r.estado === 'pendiente' && !r.sinHorario && (
                       <button
                         type="button"
@@ -993,7 +1018,7 @@ export default function AdminPanel() {
 
       {pestana === 'cobrar' && <Deudoras reservas={reservas} onPagar={cambiarPago} />}
 
-      {pestana === 'confirmar' && <PorConfirmar reservas={reservas} onConfirmar={confirmar} />}
+      {pestana === 'confirmar' && <PorConfirmar reservas={reservas} onConfirmar={confirmar} onLiberar={liberar} />}
 
       {pestana === 'historial' && (
         <section className="mt-10">
@@ -1004,6 +1029,38 @@ export default function AdminPanel() {
           </p>
           <Historial archivo={archivo} />
         </section>
+      )}
+
+      {recordatorioSinTelefono && (
+        <AdminModal
+          title="Recordatorio de cita"
+          onClose={() => {
+            setRecordatorioSinTelefono(null);
+            setCopiado(false);
+          }}
+        >
+          <p className="text-sm text-ink/80">
+            Como no colocaste número de teléfono de la clienta, se generó el texto automático para que tú se lo puedas
+            enviar a tu clienta.
+          </p>
+          <pre className="mt-4 max-h-72 overflow-y-auto whitespace-pre-wrap rounded-2xl bg-mist/60 p-4 font-sans text-sm leading-relaxed">
+            {recordatorioSinTelefono.texto}
+          </pre>
+          <button
+            type="button"
+            onClick={async () => {
+              try {
+                await navigator.clipboard.writeText(recordatorioSinTelefono.texto);
+                setCopiado(true);
+              } catch {
+                setMessage('No se pudo copiar. Selecciona el texto y cópialo a mano.');
+              }
+            }}
+            className="btn-fill mt-5 w-full py-3 text-xs"
+          >
+            {copiado ? 'Mensaje copiado' : 'Copiar mensaje'}
+          </button>
+        </AdminModal>
       )}
 
       {accion?.tipo === 'agendar' && (
