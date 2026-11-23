@@ -802,7 +802,7 @@ export default function AdminPanel() {
                     </div>
                   </div>
                   <div className="mt-4 flex flex-nowrap gap-1.5 border-t border-ink/10 pt-4 text-[11px] uppercase tracking-wider [&>button]:flex-1 [&>button]:whitespace-nowrap [&>button]:px-2 sm:gap-2 sm:text-xs sm:[&>button]:flex-none sm:[&>button]:px-3">
-                    {!r.sinHorario && r.estado !== 'bloqueado' && (
+                    {!r.sinHorario && r.estado === 'confirmada' && (
                       <button
                         type="button"
                         onClick={() => recordarCita(r)}
