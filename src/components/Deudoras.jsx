@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { formatFecha, formatHour, todayISO } from "../lib/schedule";
 
 // Monto de un precio como "35 USD" → 35.
@@ -15,11 +15,9 @@ function claveClienta(r) {
   );
 }
 
-// Clientas con citas ya atendidas y sin pagar. Una pestaña para cobrar sin buscar en la agenda.
+// Clientas con citas ya atendidas y sin pagar. Todo visible: citas, pagar y recordar.
 // Solo cuentan las citas confirmadas de hoy o de días anteriores que todavía no están pagadas.
 export default function Deudoras({ reservas, onPagar, onRecordar }) {
-  const [abiertas, setAbiertas] = useState({});
-
   const clientas = useMemo(() => {
     const hoy = todayISO();
     const pendientes = reservas.filter(
@@ -75,82 +73,57 @@ export default function Deudoras({ reservas, onPagar, onRecordar }) {
         total {totalGeneral} USD
       </p>
 
-      <ul className="mt-6 space-y-3">
-        {clientas.map((c) => {
-          const abierta = Boolean(abiertas[c.clave]);
-          return (
-            <li
-              key={c.clave}
-              className="rounded-2xl bg-white/70 ring-1 ring-mist"
-            >
-              <button
-                type="button"
-                aria-expanded={abierta}
-                onClick={() =>
-                  setAbiertas((s) => ({ ...s, [c.clave]: !s[c.clave] }))
-                }
-                className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left"
-              >
-                <span>
-                  <span className="block font-serif text-xl">{c.nombre}</span>
-                  <span className="mt-1 block text-sm text-accent">
-                    {c.citas.length} {c.citas.length === 1 ? "cita" : "citas"}
-                    {c.telefono && ` · ${c.telefono}`}
-                  </span>
+      <ul className="mt-6 space-y-4">
+        {clientas.map((c) => (
+          <li key={c.clave} className="rounded-2xl bg-white/70 p-5 ring-1 ring-mist">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="font-serif text-xl">{c.nombre}</p>
+                <p className="mt-1 text-sm text-accent">
+                  {c.citas.length} {c.citas.length === 1 ? "cita" : "citas"}
+                  {c.telefono && ` · ${c.telefono}`}
+                </p>
+              </div>
+              <div className="flex shrink-0 items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => onRecordar(c)}
+                  className="rounded-full border border-ink/30 px-4 py-1.5 text-xs normal-case tracking-normal transition hover:bg-mist"
+                >
+                  Recordar pago
+                </button>
+                <span className="rounded-full bg-red-600 px-3 py-1 text-xs uppercase tracking-widest text-white">
+                  {c.total} USD
                 </span>
-                <span className="flex shrink-0 items-center gap-3">
-                  <span className="rounded-full bg-red-600 px-3 py-1 text-xs uppercase tracking-widest text-white">
-                    {c.total} USD
-                  </span>
-                  <span
-                    aria-hidden="true"
-                    className={`text-base transition ${abierta ? "rotate-180" : ""}`}
-                  >
-                    ⌄
-                  </span>
-                </span>
-              </button>
+              </div>
+            </div>
 
-              {abierta && (
-                <>
-                  <ul className="space-y-2 px-4 pb-2">
-                    {c.citas.map((r) => (
-                      <li
-                        key={r.id}
-                        className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-mist/40 px-4 py-3"
-                      >
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium">
-                            {formatFecha(r.fecha)} · {formatHour(r.hora)}
-                          </p>
-                          <p className="text-xs text-accent">
-                            {r.servicio} · {r.precio}
-                          </p>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => onPagar(r)}
-                          className="rounded-full bg-green-700 px-4 py-1.5 text-xs uppercase tracking-widest text-white transition hover:bg-green-800"
-                        >
-                          Marcar pagado
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                  <div className="px-4 pb-4 pt-1">
-                    <button
-                      type="button"
-                      onClick={() => onRecordar(c)}
-                      className="rounded-full border border-ink/30 px-4 py-1.5 text-xs normal-case tracking-normal transition hover:bg-mist"
-                    >
-                      Recordar pago
-                    </button>
+            <ul className="mt-4 space-y-2">
+              {c.citas.map((r) => (
+                <li
+                  key={r.id}
+                  className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-mist/40 px-4 py-3"
+                >
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium">
+                      {formatFecha(r.fecha)} · {formatHour(r.hora)}
+                    </p>
+                    <p className="text-xs text-accent">
+                      {r.servicio} · {r.precio}
+                    </p>
                   </div>
-                </>
-              )}
-            </li>
-          );
-        })}
+                  <button
+                    type="button"
+                    onClick={() => onPagar(r)}
+                    className="rounded-full bg-green-700 px-4 py-1.5 text-xs uppercase tracking-widest text-white transition hover:bg-green-800"
+                  >
+                    Marcar pagado
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </li>
+        ))}
       </ul>
     </section>
   );
