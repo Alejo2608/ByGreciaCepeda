@@ -1,42 +1,40 @@
-// Cloud Functions: avisa por notificación push cuando una clienta envía una solicitud nueva.
-// Se despliega con: firebase deploy --only functions (requiere plan Blaze).
+// Cloud Functions de Grecia Cepeda.
+// 1) avisoNuevaSolicitud: cuando una clienta envía una solicitud, guarda el aviso y lo envía al celular.
+// 2) recordatorioDiario: todos los días a las 6:00 PM (hora de Venezuela) avisa las citas del día siguiente.
+// Se despliegan con: firebase deploy --only functions (requiere plan Blaze).
 const { onDocumentCreated } = require('firebase-functions/v2/firestore');
+const { onSchedule } = require('firebase-functions/v2/scheduler');
 const { initializeApp } = require('firebase-admin/app');
-const { getFirestore } = require('firebase-admin/firestore');
+const { getFirestore, FieldValue } = require('firebase-admin/firestore');
 const { getMessaging } = require('firebase-admin/messaging');
 
 initializeApp();
 
-// Al tocar la notificación se abre el panel directamente en el día de la solicitud.
 const SITIO = 'https://bygreciacepeda.site/#admin';
 
-exports.avisoNuevaSolicitud = onDocumentCreated('reservas/{reservaId}', async (event) => {
-  const r = event.data?.data();
-  // Solo las solicitudes de clientas (pendientes). Las citas que Grecia agenda a mano no avisan.
-  if (!r || r.estado !== 'pendiente') return;
+// Guarda un aviso en la campana del panel.
+async function guardarAviso(datos) {
+  await getFirestore()
+    .collection('notificaciones')
+    .add({ ...datos, leida: false, creado: FieldValue.serverTimestamp() });
+}
 
+// Envía la notificación a todos los celulares registrados y limpia los que ya no sirven.
+async function enviarPush({ titulo, texto, link }) {
   const tokensSnap = await getFirestore().collection('tokens').get();
-  const tokens = tokensSnap.docs.map((d) => d.id);
-  if (tokens.length === 0) return;
+  if (tokensSnap.empty) return;
 
   const respuesta = await getMessaging().sendEachForMulticast({
-    tokens,
-    notification: {
-      title: 'Nueva solicitud de cita',
-      body: `${r.nombre} · ${r.servicio} · ${r.fecha} ${r.hora}`,
-    },
-    webpush: { fcmOptions: { link: `${SITIO}?fecha=${r.fecha}` } },
+    tokens: tokensSnap.docs.map((d) => d.id),
+    notification: { title: titulo, body: texto },
+    webpush: { fcmOptions: { link } },
   });
 
-  // Registro del resultado: sirve para revisar en "firebase functions:log" si el aviso salió y a cuántos equipos.
-  console.log(
-    `aviso ${r.nombre} ${r.fecha} ${r.hora}: enviados=${respuesta.successCount} fallidos=${respuesta.failureCount}`,
-  );
+  console.log(`push "${titulo}": enviados=${respuesta.successCount} fallidos=${respuesta.failureCount}`);
   respuesta.responses.forEach((res, i) => {
     if (res.error) console.log(`error token ${i}: ${res.error.code}`);
   });
 
-  // Limpia los dispositivos que ya no aceptan notificaciones (permiso revocado, navegador borrado).
   const borrar = [];
   respuesta.responses.forEach((res, i) => {
     const codigo = res.error?.code;
@@ -45,4 +43,44 @@ exports.avisoNuevaSolicitud = onDocumentCreated('reservas/{reservaId}', async (e
     }
   });
   await Promise.all(borrar);
+}
+
+// Fecha de mañana en Venezuela (AAAA-MM-DD).
+function mananaEnVenezuela() {
+  const hoy = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Caracas' });
+  const [y, m, d] = hoy.split('-').map(Number);
+  const manana = new Date(Date.UTC(y, m - 1, d + 1));
+  return manana.toISOString().slice(0, 10);
+}
+
+exports.avisoNuevaSolicitud = onDocumentCreated('reservas/{reservaId}', async (event) => {
+  const r = event.data?.data();
+  // Solo las solicitudes de clientas (pendientes). Las citas que Grecia agenda a mano no avisan.
+  if (!r || r.estado !== 'pendiente') return;
+
+  const titulo = 'Nueva solicitud de cita';
+  const texto = `${r.nombre} · ${r.servicio} · ${r.fecha} ${r.hora}`;
+  await guardarAviso({ tipo: 'solicitud', titulo, texto, fecha: r.fecha, hora: r.hora, reservaId: event.params.reservaId });
+  await enviarPush({ titulo, texto, link: `${SITIO}?fecha=${r.fecha}` });
 });
+
+exports.recordatorioDiario = onSchedule(
+  { schedule: '0 18 * * *', timeZone: 'America/Caracas', region: 'us-east1' },
+  async () => {
+    const manana = mananaEnVenezuela();
+    const snap = await getFirestore().collection('reservas').where('fecha', '==', manana).get();
+    const citas = snap.docs
+      .map((d) => d.data())
+      .filter((r) => (r.estado === 'confirmada' || r.estado === 'pendiente') && !r.sinHorario)
+      .sort((a, b) => a.hora.localeCompare(b.hora));
+
+    // Si mañana no hay citas, no se envía nada.
+    if (citas.length === 0) return;
+
+    const lista = citas.map((c) => `${c.hora} ${c.nombre} (${c.servicio})`).join(' · ');
+    const titulo = `Mañana tienes ${citas.length} ${citas.length === 1 ? 'cita' : 'citas'}`;
+    const texto = `${lista}. Recuerda confirmar las pendientes.`;
+    await guardarAviso({ tipo: 'recordatorio', titulo, texto, fecha: manana });
+    await enviarPush({ titulo, texto, link: `${SITIO}?fecha=${manana}` });
+  },
+);

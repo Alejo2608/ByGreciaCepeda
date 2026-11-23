@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { GoogleAuthProvider, onAuthStateChanged, signInWithPopup, signOut } from 'firebase/auth';
-import { collection, doc, getDocs, onSnapshot, query, updateDoc, where } from 'firebase/firestore';
+import { collection, doc, getDocs, limit, onSnapshot, orderBy, query, updateDoc, where, writeBatch } from 'firebase/firestore';
+import Campana from './Campana';
 import { auth, db } from '../lib/firebase';
 import { esAdmin } from '../lib/admin';
 import {
@@ -308,7 +309,7 @@ export default function AdminPanel() {
   const [archivo, setArchivo] = useState([]); // clientas ya atendidas (colección archivo)
   const [pestana, setPestana] = useState('agenda'); // sección visible: 'agenda' | 'historial'
   const [notifEstado, setNotifEstado] = useState('inactivas'); // avisos push: inactivas | activando | activas | bloqueadas | error
-  const [campanaAbierta, setCampanaAbierta] = useState(false); // ventana de solicitudes por confirmar
+  const [notificaciones, setNotificaciones] = useState([]); // avisos de la campana (solicitudes y recordatorios)
   const [preguntarAvisos, setPreguntarAvisos] = useState(false); // pregunta única para activar los avisos
   const archivando = useRef(new Set()); // días que se están archivando (evita repetir)
 
@@ -396,14 +397,34 @@ export default function AdminPanel() {
     if (!yaPregunto && Notification.permission === 'default') setPreguntarAvisos(true);
   }, [isAdmin, user]);
 
-  // Solicitudes por confirmar, de la más reciente a la más antigua (para la campana).
-  const solicitudes = useMemo(
-    () =>
-      reservas
-        .filter((r) => r.estado === 'pendiente' && !r.sinHorario)
-        .sort((a, b) => (b.creado?.seconds ?? 0) - (a.creado?.seconds ?? 0)),
-    [reservas],
-  );
+  // Notificaciones guardadas (solicitudes nuevas y recordatorios diarios), las más recientes primero.
+  useEffect(() => {
+    if (!isAdmin) return undefined;
+    const consulta = query(collection(db, 'notificaciones'), orderBy('creado', 'desc'), limit(50));
+    return onSnapshot(consulta, (snap) => {
+      setNotificaciones(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+    });
+  }, [isAdmin, reconexion]);
+
+  // Al abrir la campana se marcan como leídas.
+  const marcarAvisosLeidos = async () => {
+    const pendientes = notificaciones.filter((a) => !a.leida);
+    if (pendientes.length === 0) return;
+    try {
+      const lote = writeBatch(db);
+      pendientes.forEach((a) => lote.update(doc(db, 'notificaciones', a.id), { leida: true }));
+      await lote.commit();
+    } catch {
+      /* si falla, el aviso sigue sin leer y se vuelve a intentar al abrir */
+    }
+  };
+
+  // Va al día del aviso en la agenda.
+  const irAAviso = (a) => {
+    setFecha(a.fecha);
+    setPestana('agenda');
+    setTimeout(() => document.getElementById('citas-del-dia')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150);
+  };
 
   // Clientas ya atendidas, para la sección de días anteriores.
   useEffect(() => {
@@ -642,83 +663,15 @@ export default function AdminPanel() {
         </div>
       </div>
 
-      {/* Campana: solicitudes por confirmar. Al tocar una, va a su día en la agenda. */}
-      <div className="fixed right-4 top-4 z-[70]">
-        <button
-          type="button"
-          onClick={() => setCampanaAbierta((v) => !v)}
-          aria-label={`Solicitudes por confirmar: ${solicitudes.length}`}
-          aria-expanded={campanaAbierta}
-          className="relative flex h-11 w-11 items-center justify-center rounded-full bg-paper text-ink shadow-sm ring-1 ring-mist transition hover:bg-mist"
-        >
-          <svg
-            viewBox="0 0 24 24"
-            className="h-5 w-5"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.6"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-          >
-            <path d="M6 8a6 6 0 0 1 12 0c0 7 3 8 3 8H3s3-1 3-8" />
-            <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
-          </svg>
-          {solicitudes.length > 0 && (
-            <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-medium text-white">
-              {solicitudes.length}
-            </span>
-          )}
-        </button>
-
-        {campanaAbierta && (
-          <div className="absolute right-0 top-14 w-80 max-w-[90vw] rounded-2xl bg-paper p-3 shadow-xl ring-1 ring-mist">
-            <p className="px-2 pb-2 text-xs uppercase tracking-widest text-accent">Por confirmar</p>
-            {solicitudes.length === 0 ? (
-              <p className="px-2 py-3 text-sm text-accent">No hay solicitudes pendientes.</p>
-            ) : (
-              <ul className="max-h-96 space-y-1 overflow-y-auto">
-                {solicitudes.map((r) => (
-                  <li key={r.id}>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setFecha(r.fecha);
-                        setPestana('agenda');
-                        setCampanaAbierta(false);
-                        setTimeout(
-                          () => document.getElementById('citas-del-dia')?.scrollIntoView({ behavior: 'smooth', block: 'start' }),
-                          150,
-                        );
-                      }}
-                      className="w-full rounded-xl px-3 py-2.5 text-left transition hover:bg-mist"
-                    >
-                      <span className="block text-sm font-medium">{r.nombre}</span>
-                      <span className="block text-xs text-accent">
-                        {r.servicio} · {formatFecha(r.fecha)} · {formatHour(r.hora)}
-                      </span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-            {notificacionesDisponibles() && notifEstado !== 'activas' && (
-              <button
-                type="button"
-                onClick={activarAvisos}
-                disabled={notifEstado === 'activando'}
-                className="mt-3 w-full rounded-xl border border-ink/20 px-3 py-2 text-xs uppercase tracking-widest transition hover:bg-mist disabled:opacity-60"
-              >
-                {notifEstado === 'activando'
-                  ? 'Activando…'
-                  : notifEstado === 'bloqueadas'
-                    ? 'Avisos bloqueados en el navegador'
-                    : 'Activar avisos en este celular'}
-              </button>
-            )}
-          </div>
-        )}
-      </div>
+      {/* Campana: solicitudes nuevas y recordatorios del día siguiente. */}
+      <Campana
+        avisos={notificaciones}
+        onIr={irAAviso}
+        onAbrir={marcarAvisosLeidos}
+        mostrarActivar={notificacionesDisponibles() && notifEstado !== 'activas'}
+        activando={notifEstado === 'activando'}
+        onActivar={activarAvisos}
+      />
 
       <nav aria-label="Secciones del panel" className="mt-8 flex gap-2 border-b border-ink/10 pb-3 text-xs uppercase tracking-widest">
         {[

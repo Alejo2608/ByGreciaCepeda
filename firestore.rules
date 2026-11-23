@@ -54,6 +54,11 @@ service cloud.firestore {
       allow read, create, update, delete: if isAdmin();
     }
 
+    // Notificaciones de la campana del panel. Las crean las funciones del servidor; Grecia solo las lee y marca como leídas.
+    match /notificaciones/{notificacionId} {
+      allow read, update, delete: if isAdmin();
+    }
+
     // Citas ya atendidas y pagadas (archivo). Solo Grecia puede verlas o escribirlas.
     match /archivo/{reservaId} {
       allow read, create, update, delete: if isAdmin();
