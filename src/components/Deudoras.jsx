@@ -47,7 +47,12 @@ export default function Deudoras({ reservas, onPagar, onRecordar }) {
           (a.fecha + a.hora).localeCompare(b.fecha + b.hora),
         ),
       }))
-      .sort((a, b) => b.total - a.total);
+      // De la deudora más antigua (cita más vieja sin pagar) a la más reciente.
+      .sort((a, b) =>
+        (a.citas[0].fecha + a.citas[0].hora).localeCompare(
+          b.citas[0].fecha + b.citas[0].hora,
+        ),
+      );
   }, [reservas]);
 
   const totalGeneral = clientas.reduce((n, c) => n + c.total, 0);
