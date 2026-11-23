@@ -309,6 +309,7 @@ export default function AdminPanel() {
   const [pestana, setPestana] = useState('agenda'); // sección visible: 'agenda' | 'historial'
   const [notifEstado, setNotifEstado] = useState('inactivas'); // avisos push: inactivas | activando | activas | bloqueadas | error
   const [campanaAbierta, setCampanaAbierta] = useState(false); // ventana de solicitudes por confirmar
+  const [preguntarAvisos, setPreguntarAvisos] = useState(false); // pregunta única para activar los avisos
   const archivando = useRef(new Set()); // días que se están archivando (evita repetir)
 
   const isAdmin = esAdmin(user);
@@ -377,6 +378,23 @@ export default function AdminPanel() {
     window.addEventListener('hashchange', leerFecha);
     return () => window.removeEventListener('hashchange', leerFecha);
   }, []);
+
+  // Primera vez que entra Grecia: se pregunta una sola vez si quiere recibir avisos en este celular.
+  // Si ya dio permiso antes, se registra el dispositivo sin preguntar de nuevo.
+  useEffect(() => {
+    if (!isAdmin || !notificacionesDisponibles()) return;
+    if (Notification.permission === 'granted') {
+      activarNotificaciones(user.email).then(() => setNotifEstado('activas')).catch(() => {});
+      return;
+    }
+    let yaPregunto = false;
+    try {
+      yaPregunto = localStorage.getItem('avisosPreguntados') === '1';
+    } catch {
+      yaPregunto = false;
+    }
+    if (!yaPregunto && Notification.permission === 'default') setPreguntarAvisos(true);
+  }, [isAdmin, user]);
 
   // Solicitudes por confirmar, de la más reciente a la más antigua (para la campana).
   const solicitudes = useMemo(
@@ -455,6 +473,27 @@ export default function AdminPanel() {
       </section>
     );
   }
+
+  // Activa los avisos en este celular (se llama desde un toque, como exige iPhone).
+  const activarAvisos = async () => {
+    setNotifEstado('activando');
+    try {
+      await activarNotificaciones(user.email);
+      setNotifEstado('activas');
+    } catch (err) {
+      setNotifEstado(err.message === 'sin-permiso' ? 'bloqueadas' : 'error');
+    }
+  };
+
+  const responderPregunta = (quiere) => {
+    try {
+      localStorage.setItem('avisosPreguntados', '1');
+    } catch {
+      /* si el navegador no guarda datos, la pregunta puede volver a salir */
+    }
+    setPreguntarAvisos(false);
+    if (quiere) activarAvisos();
+  };
 
   const confirmar = async (r) => {
     setMessage('');
@@ -597,32 +636,6 @@ export default function AdminPanel() {
       <div className="flex items-center justify-between">
         <h1 className="whitespace-nowrap font-serif text-3xl sm:text-4xl">Panel de citas</h1>
         <div className="flex items-center gap-5">
-          {notificacionesDisponibles() && (
-            <button
-              type="button"
-              disabled={notifEstado === 'activas'}
-              onClick={async () => {
-                setNotifEstado('activando');
-                try {
-                  await activarNotificaciones(user.email);
-                  setNotifEstado('activas');
-                } catch (err) {
-                  setNotifEstado(err.message === 'sin-permiso' ? 'bloqueadas' : 'error');
-                }
-              }}
-              className="text-xs uppercase tracking-widest text-accent hover:text-ink disabled:opacity-60"
-            >
-              {notifEstado === 'activas'
-                ? 'Avisos activos'
-                : notifEstado === 'activando'
-                  ? 'Activando…'
-                  : notifEstado === 'bloqueadas'
-                    ? 'Avisos bloqueados'
-                    : notifEstado === 'error'
-                      ? 'Reintentar avisos'
-                      : 'Activar avisos'}
-            </button>
-          )}
           <button type="button" onClick={() => signOut(auth)} className="text-xs uppercase tracking-widest text-accent hover:text-ink">
             Cerrar sesión
           </button>
@@ -688,6 +701,20 @@ export default function AdminPanel() {
                   </li>
                 ))}
               </ul>
+            )}
+            {notificacionesDisponibles() && notifEstado !== 'activas' && (
+              <button
+                type="button"
+                onClick={activarAvisos}
+                disabled={notifEstado === 'activando'}
+                className="mt-3 w-full rounded-xl border border-ink/20 px-3 py-2 text-xs uppercase tracking-widest transition hover:bg-mist disabled:opacity-60"
+              >
+                {notifEstado === 'activando'
+                  ? 'Activando…'
+                  : notifEstado === 'bloqueadas'
+                    ? 'Avisos bloqueados en el navegador'
+                    : 'Activar avisos en este celular'}
+              </button>
             )}
           </div>
         )}
@@ -930,6 +957,28 @@ export default function AdminPanel() {
 
         </div>
       </div>
+      )}
+
+      {/* Pregunta única para activar avisos. Solo se muestra si el celular todavía no decidió. */}
+      {preguntarAvisos && (
+        <div role="dialog" aria-label="Avisos de solicitudes" className="fixed inset-x-4 bottom-6 z-[65] mx-auto max-w-sm rounded-2xl bg-paper p-5 shadow-xl ring-1 ring-mist">
+          <p className="font-serif text-2xl">Avisos de solicitudes</p>
+          <p className="mt-2 text-sm text-ink/80">
+            ¿Quieres que te avisemos en este celular cuando una clienta pida una cita?
+          </p>
+          <div className="mt-5 flex gap-3">
+            <button type="button" onClick={() => responderPregunta(true)} className="btn-fill px-5 py-2 text-xs">
+              Sí, avisarme
+            </button>
+            <button
+              type="button"
+              onClick={() => responderPregunta(false)}
+              className="rounded-full border border-ink/30 px-5 py-2 text-xs uppercase tracking-widest transition hover:bg-mist"
+            >
+              Ahora no
+            </button>
+          </div>
+        </div>
       )}
 
       {/* Aviso flotante: se queda en pantalla hasta que Grecia lo cierre, aunque esté lejos de la lista. */}
