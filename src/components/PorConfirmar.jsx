@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { formatFecha, formatHour } from '../lib/schedule';
 
 // Citas que todavía no se confirmaron, agrupadas por día. Desde aquí se confirman con un toque.
-export default function PorConfirmar({ reservas, onConfirmar }) {
+export default function PorConfirmar({ reservas, onConfirmar, onLiberar }) {
   const porDia = useMemo(() => {
     const pendientes = reservas
       .filter((r) => r.estado === 'pendiente' && !r.sinHorario)
@@ -36,7 +36,7 @@ export default function PorConfirmar({ reservas, onConfirmar }) {
               {lista.map((r) => (
                 <li
                   key={r.id}
-                  className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-white/70 px-5 py-4 ring-1 ring-mist"
+                  className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-accent px-5 py-4 text-paper ring-1 ring-accent [&_.text-accent]:text-paper/80"
                 >
                   <div className="min-w-0">
                     <p className="text-base font-medium">
@@ -46,9 +46,25 @@ export default function PorConfirmar({ reservas, onConfirmar }) {
                       {r.servicio} · {r.telefono}
                     </p>
                   </div>
-                  <button type="button" onClick={() => onConfirmar(r)} className="btn-fill px-5 py-2 text-xs normal-case tracking-normal">
-                    Confirmar
-                  </button>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="rounded-full bg-red-600 px-3 py-1 text-xs uppercase tracking-widest text-white">
+                      Por confirmar
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => onConfirmar(r)}
+                      className="btn-fill border-paper px-4 py-1.5 text-xs normal-case tracking-normal text-paper"
+                    >
+                      Confirmar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onLiberar(r)}
+                      className="rounded-full border border-paper/40 px-4 py-1.5 text-xs normal-case tracking-normal text-paper transition hover:bg-paper/10"
+                    >
+                      Liberar
+                    </button>
+                  </div>
                 </li>
               ))}
             </ul>
