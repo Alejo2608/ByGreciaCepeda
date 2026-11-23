@@ -314,12 +314,26 @@ export default function AdminPanel() {
 
   useEffect(() => onAuthStateChanged(auth, setUser), []);
 
+  // Cuando la app vuelve al primer plano (iPhone), se vuelve a conectar para traer los cambios al instante.
+  const [reconexion, setReconexion] = useState(0);
+  useEffect(() => {
+    const alVolver = () => {
+      if (document.visibilityState === 'visible') setReconexion((n) => n + 1);
+    };
+    document.addEventListener('visibilitychange', alVolver);
+    window.addEventListener('focus', alVolver);
+    return () => {
+      document.removeEventListener('visibilitychange', alVolver);
+      window.removeEventListener('focus', alVolver);
+    };
+  }, []);
+
   useEffect(() => {
     if (!isAdmin) return undefined;
     return onSnapshot(collection(db, 'reservas'), (snap) => {
       setReservas(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
     });
-  }, [isAdmin]);
+  }, [isAdmin, reconexion]);
 
   // Cuántas reservas hay por día (para marcar el calendario).
   // Los bloqueos de días ya pasados no cuentan: su punto se quita cuando el día termina.
@@ -369,7 +383,7 @@ export default function AdminPanel() {
     return onSnapshot(collection(db, 'archivo'), (snap) => {
       setArchivo(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
     });
-  }, [isAdmin]);
+  }, [isAdmin, reconexion]);
 
   // Días ya llegados (hoy o antes) en los que todas las citas están pagadas: se archivan solos y se avisa a Grecia.
   useEffect(() => {

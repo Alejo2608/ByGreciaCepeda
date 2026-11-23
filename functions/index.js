@@ -28,6 +28,14 @@ exports.avisoNuevaSolicitud = onDocumentCreated('reservas/{reservaId}', async (e
     webpush: { fcmOptions: { link: `${SITIO}?fecha=${r.fecha}` } },
   });
 
+  // Registro del resultado: sirve para revisar en "firebase functions:log" si el aviso salió y a cuántos equipos.
+  console.log(
+    `aviso ${r.nombre} ${r.fecha} ${r.hora}: enviados=${respuesta.successCount} fallidos=${respuesta.failureCount}`,
+  );
+  respuesta.responses.forEach((res, i) => {
+    if (res.error) console.log(`error token ${i}: ${res.error.code}`);
+  });
+
   // Limpia los dispositivos que ya no aceptan notificaciones (permiso revocado, navegador borrado).
   const borrar = [];
   respuesta.responses.forEach((res, i) => {
