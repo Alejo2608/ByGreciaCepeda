@@ -684,7 +684,7 @@ export default function AdminPanel() {
                   <div className="mt-4 flex flex-wrap gap-2 border-t border-ink/10 pt-4 text-xs uppercase tracking-widest">
                     {r.estado === 'pendiente' && !r.sinHorario && (
                       <button type="button" onClick={() => confirmar(r)} className="btn-fill px-4 py-1 text-xs">
-                        Confirmar cita
+                        Confirmar
                       </button>
                     )}
                     <button
