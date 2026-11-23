@@ -45,6 +45,14 @@ async function enviarPush({ titulo, texto, link }) {
   await Promise.all(borrar);
 }
 
+// "08:30" → "8:30 AM".
+function hora12(hhmm) {
+  const [h, m] = hhmm.split(':').map(Number);
+  const sufijo = h >= 12 ? 'PM' : 'AM';
+  const h12 = ((h + 11) % 12) + 1;
+  return `${h12}:${String(m).padStart(2, '0')} ${sufijo}`;
+}
+
 // Fecha de mañana en Venezuela (AAAA-MM-DD).
 function mananaEnVenezuela() {
   const hoy = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Caracas' });
@@ -77,9 +85,12 @@ exports.recordatorioDiario = onSchedule(
     // Si mañana no hay citas, no se envía nada.
     if (citas.length === 0) return;
 
-    const lista = citas.map((c) => `${c.hora} ${c.nombre} (${c.servicio})`).join(' · ');
+    // Una cita por línea: "8:00 AM · Wilmary · Tecnológicas Three Core".
+    const lineas = citas.map((c) => `${hora12(c.hora)} · ${c.nombre} · ${c.servicio}`);
+    const pendientes = citas.filter((c) => c.estado === 'pendiente').length;
+    if (pendientes > 0) lineas.push(`Por confirmar: ${pendientes}`);
     const titulo = `Mañana tienes ${citas.length} ${citas.length === 1 ? 'cita' : 'citas'}`;
-    const texto = `${lista}. Recuerda confirmar las pendientes.`;
+    const texto = lineas.join('\n');
     await guardarAviso({ tipo: 'recordatorio', titulo, texto, fecha: manana });
     await enviarPush({ titulo, texto, link: `${SITIO}?fecha=${manana}` });
   },

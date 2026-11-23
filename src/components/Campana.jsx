@@ -63,7 +63,7 @@ export default function Campana({ avisos, onIr, onAbrir, mostrarActivar, activan
                       {a.tipo === 'recordatorio' ? 'Recordatorio de mañana' : 'Nueva solicitud'}
                     </span>
                     <span className="block text-sm font-medium">{a.titulo}</span>
-                    <span className="block text-xs text-accent">
+                    <span className="mt-1 block whitespace-pre-line text-xs leading-relaxed text-accent">
                       {a.texto || `${formatFecha(a.fecha)}${a.hora ? ` · ${formatHour(a.hora)}` : ''}`}
                     </span>
                   </button>
