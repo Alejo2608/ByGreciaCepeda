@@ -75,35 +75,23 @@ export default function Deudoras({ reservas, onPagar, onRecordar }) {
 
       <ul className="mt-6 space-y-4">
         {clientas.map((c) => (
-          <li key={c.clave} className="rounded-2xl bg-white/70 p-5 ring-1 ring-mist">
-            <div className="flex flex-wrap items-start justify-between gap-3">
+          <li key={c.clave} className="overflow-hidden rounded-2xl bg-white/70 ring-1 ring-mist">
+            <div className="flex items-center justify-between gap-3 border-b border-ink/10 px-5 py-4">
               <div className="min-w-0">
                 <p className="font-serif text-xl">{c.nombre}</p>
-                <p className="mt-1 text-sm text-accent">
+                <p className="text-sm text-accent">
                   {c.citas.length} {c.citas.length === 1 ? "cita" : "citas"}
                   {c.telefono && ` · ${c.telefono}`}
                 </p>
               </div>
-              <div className="flex shrink-0 items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => onRecordar(c)}
-                  className="rounded-full border border-ink/30 px-4 py-1.5 text-xs normal-case tracking-normal transition hover:bg-mist"
-                >
-                  Recordar pago
-                </button>
-                <span className="rounded-full bg-red-600 px-3 py-1 text-xs uppercase tracking-widest text-white">
-                  {c.total} USD
-                </span>
-              </div>
+              <span className="shrink-0 rounded-full bg-red-600 px-3 py-1 text-xs uppercase tracking-widest text-white">
+                {c.total} USD
+              </span>
             </div>
 
-            <ul className="mt-4 space-y-2">
+            <ul className="divide-y divide-ink/10">
               {c.citas.map((r) => (
-                <li
-                  key={r.id}
-                  className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-mist/40 px-4 py-3"
-                >
+                <li key={r.id} className="flex flex-wrap items-center justify-between gap-3 px-5 py-3">
                   <div className="min-w-0">
                     <p className="text-sm font-medium">
                       {formatFecha(r.fecha)} · {formatHour(r.hora)}
@@ -112,13 +100,22 @@ export default function Deudoras({ reservas, onPagar, onRecordar }) {
                       {r.servicio} · {r.precio}
                     </p>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => onPagar(r)}
-                    className="rounded-full bg-green-700 px-4 py-1.5 text-xs uppercase tracking-widest text-white transition hover:bg-green-800"
-                  >
-                    Marcar pagado
-                  </button>
+                  <div className="flex shrink-0 items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => onRecordar({ ...c, citas: [r], total: montoDe(r.precio) })}
+                      className="rounded-full border border-ink/30 px-3 py-1.5 text-xs normal-case tracking-normal transition hover:bg-mist"
+                    >
+                      Recordar pago
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onPagar(r)}
+                      className="rounded-full bg-green-700 px-3 py-1.5 text-xs uppercase tracking-widest text-white transition hover:bg-green-800"
+                    >
+                      Marcar pagado
+                    </button>
+                  </div>
                 </li>
               ))}
             </ul>
