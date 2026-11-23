@@ -45,6 +45,38 @@ async function enviarPush({ titulo, texto, link }) {
   await Promise.all(borrar);
 }
 
+// Categoría corta de un servicio, para la notificación: Pestañas, Cejas, Maquillaje o Curso.
+// Las listas coinciden con src/data/services.js y src/data/courses.js.
+const CATEGORIA_POR_SERVICIO = {
+  'Técnica clásica 1x1': 'Pestañas',
+  'Efecto rímel': 'Pestañas',
+  'Efecto húmedo': 'Pestañas',
+  'Tecnológicas 5W': 'Pestañas',
+  'Tecno rímel efecto Aura': 'Pestañas',
+  'Tecnológicas Three Core': 'Pestañas',
+  'Tecnológicas curva "M" Foxy': 'Pestañas',
+  'Tecnológicas ucraniano': 'Pestañas',
+  'Efecto Kim-K': 'Pestañas',
+  'Efecto cómic (manga)': 'Pestañas',
+  'Retiro de extensiones': 'Pestañas',
+  'Lash lifting': 'Pestañas',
+  'Epilación con henna': 'Cejas',
+  'Brows lamination': 'Cejas',
+  'Micro Brows (Shadow Brows)': 'Cejas',
+  'Retoque de micro brows': 'Cejas',
+  'Social Makeup': 'Maquillaje',
+  'Soft Makeup': 'Maquillaje',
+  'Makeup Novias': 'Maquillaje',
+  'Makeup Quinceañeras': 'Maquillaje',
+  'Prueba de maquillaje': 'Maquillaje',
+  'Extensiones de pestañas pelo a pelo': 'Curso',
+  'Diseño de cejas desde 0': 'Curso',
+};
+
+function categoriaDe(servicio) {
+  return CATEGORIA_POR_SERVICIO[servicio] ?? 'Cita';
+}
+
 // "08:30" → "8:30 AM".
 function hora12(hhmm) {
   const [h, m] = hhmm.split(':').map(Number);
@@ -85,9 +117,9 @@ exports.recordatorioDiario = onSchedule(
     // Si mañana no hay citas, no se envía nada.
     if (citas.length === 0) return;
 
-    // Una cita por línea: "8:00 AM · Wilmary caldera". Si el nombre es muy largo se corta con "…" para que no se parta.
+    // Una cita por línea: "8:00 AM · Wilmary · Pestañas". El nombre se corta con "…" si es muy largo.
     const cortar = (texto, max) => (texto.length > max ? `${texto.slice(0, max - 1).trimEnd()}…` : texto);
-    const lineas = citas.map((c) => `${hora12(c.hora)} · ${cortar(c.nombre, 24)}`);
+    const lineas = citas.map((c) => `${hora12(c.hora)} · ${cortar(c.nombre, 18)} · ${categoriaDe(c.servicio)}`);
     const pendientes = citas.filter((c) => c.estado === 'pendiente').length;
     if (pendientes > 0) lineas.push(`Por confirmar: ${pendientes}`);
     const titulo = `Mañana tienes ${citas.length} ${citas.length === 1 ? 'cita' : 'citas'}`;
