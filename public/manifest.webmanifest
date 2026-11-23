@@ -2,7 +2,7 @@
   "name": "Grecia Cepeda",
   "short_name": "Grecia Cepeda",
   "description": "Pestañas, maquillaje y cursos con Grecia Cepeda. Agenda tu cita.",
-  "start_url": "/",
+  "start_url": "/#admin",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
