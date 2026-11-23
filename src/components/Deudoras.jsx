@@ -75,11 +75,11 @@ export default function Deudoras({ reservas, onPagar, onRecordar }) {
 
       <ul className="mt-6 space-y-4">
         {clientas.map((c) => (
-          <li key={c.clave} className="overflow-hidden rounded-2xl bg-white/70 ring-1 ring-mist">
-            <div className="flex items-center justify-between gap-3 px-5 pt-5">
+          <li key={c.clave} className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-mist">
+            <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <p className="font-serif text-xl">{c.nombre}</p>
-                <p className="text-sm text-accent">
+                <p className="text-lg font-medium">{c.nombre}</p>
+                <p className="mt-1 text-sm text-accent">
                   {c.citas.length} {c.citas.length === 1 ? "cita" : "citas"}
                   {c.telefono && ` · ${c.telefono}`}
                 </p>
@@ -89,9 +89,9 @@ export default function Deudoras({ reservas, onPagar, onRecordar }) {
               </span>
             </div>
 
-            <ul className="mt-4 space-y-3 px-5 pb-5">
+            <ul className="mt-5 space-y-4">
               {c.citas.map((r) => (
-                <li key={r.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-mist/50 px-4 py-3">
+                <li key={r.id} className="flex flex-wrap items-center justify-between gap-3">
                   <div className="min-w-0">
                     <p className="text-sm font-medium">
                       {formatFecha(r.fecha)} · {formatHour(r.hora)}
