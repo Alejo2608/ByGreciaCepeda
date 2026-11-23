@@ -29,7 +29,9 @@ export function mensajeRecordatorio(r) {
 // Texto para recordar el pago de las citas ya atendidas que todavía no se han pagado.
 export function mensajePagoPendiente(nombre, citas, total) {
   // Cada cita en su bloque: servicio, fecha y precio.
-  const bloques = citas.map((c) =>
+  // Ordenadas de la más vieja a la más reciente (fecha y luego hora).
+  const ordenadas = [...citas].sort((a, b) => (a.fecha + a.hora).localeCompare(b.fecha + b.hora));
+  const bloques = ordenadas.map((c) =>
     [`👁️ Servicio: ${c.servicio}`, `📅 Fecha: ${formatFecha(c.fecha)}`, `💵 Precio: ${c.precio}`].join('\n'),
   );
   return [
