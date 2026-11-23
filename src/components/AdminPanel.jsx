@@ -50,7 +50,7 @@ const bloqueosGrupo = [
 ];
 
 const statusLabel = {
-  pendiente: 'Pendiente',
+  pendiente: 'Por confirmar',
   confirmada: 'Confirmada',
   bloqueado: 'Bloqueado',
 };
@@ -763,23 +763,18 @@ export default function AdminPanel() {
                             )}
                             {reserva.datos && <p className="mt-1 text-xs text-ink/75">{reserva.datos}</p>}
                           </div>
-                          <div className="flex flex-wrap gap-2">
-                            {reserva.estado === 'pendiente' && (
-                              <button type="button" onClick={() => confirmar(reserva)} className="btn-fill px-4 py-1 text-xs">
-                                Confirmar
-                              </button>
-                            )}
-                            {/* Las citas confirmadas se cancelan desde "Citas del día" (Liberar), no aquí. */}
-                            {reserva.estado !== 'confirmada' && (
+                          {/* Las citas no tienen botones aquí: se confirman y cancelan desde "Citas del día". */}
+                          {reserva.estado === 'bloqueado' && (
+                            <div className="flex flex-wrap gap-2">
                               <button
                                 type="button"
                                 onClick={() => liberar(reserva)}
                                 className="rounded-full border border-ink/30 px-4 py-1 text-xs uppercase tracking-widest transition hover:bg-mist"
                               >
-                                {reserva.estado === 'bloqueado' ? 'Desbloquear' : 'Cancelar cita'}
+                                Desbloquear
                               </button>
-                            )}
-                          </div>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
