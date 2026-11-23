@@ -11,6 +11,14 @@ const links = [
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  // En el panel de admin el menú de hamburguesa no se usa: ahí va la campana de solicitudes.
+  const [enAdmin, setEnAdmin] = useState(() => window.location.hash.startsWith('#admin'));
+
+  useEffect(() => {
+    const onHash = () => setEnAdmin(window.location.hash.startsWith('#admin'));
+    window.addEventListener('hashchange', onHash);
+    return () => window.removeEventListener('hashchange', onHash);
+  }, []);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
@@ -52,7 +60,7 @@ export default function Navbar() {
 
         <button
           type="button"
-          className="flex h-10 w-10 flex-col items-center justify-center gap-1.5 md:hidden"
+          className={`flex h-10 w-10 flex-col items-center justify-center gap-1.5 md:hidden ${enAdmin ? 'hidden' : ''}`}
           aria-label="Abrir menú"
           aria-expanded={open}
           onClick={() => setOpen((v) => !v)}
