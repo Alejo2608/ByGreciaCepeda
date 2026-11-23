@@ -569,7 +569,7 @@ export default function AdminPanel() {
   );
 
   return (
-    <section className="mx-auto max-w-5xl px-4 py-32">
+    <section className="mx-auto w-full min-w-0 max-w-5xl px-4 py-32">
       <div className="flex items-center justify-between">
         <h1 className="font-serif text-3xl">Panel de citas</h1>
         <div className="flex items-center gap-5">
@@ -626,7 +626,7 @@ export default function AdminPanel() {
       </nav>
 
       {pestana === 'agenda' && (
-      <div className="mt-10 grid gap-8 md:grid-cols-[1.1fr_1fr]">
+      <div className="mt-10 grid min-w-0 grid-cols-1 gap-8 md:grid-cols-[1.1fr_1fr]">
         <div>
           <Calendar value={fecha} onChange={setFecha} counts={counts} size="large" />
           <p className="mt-3 text-xs text-accent">Los puntos marcan los días con citas o bloqueos.</p>
