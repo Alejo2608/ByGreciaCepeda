@@ -2,7 +2,14 @@ import { addDays, formatFecha, formatHour, todayISO } from './schedule';
 
 // Texto del recordatorio que se le envía a la clienta.
 export function mensajeRecordatorio(r) {
-  const cuando = r.fecha === addDays(todayISO(), 1) ? 'para mañana' : `para el ${formatFecha(r.fecha)}`;
+  // Solo dice "mañana" o "hoy" cuando es exactamente ese día; en otro caso muestra la fecha completa.
+  const hoy = todayISO();
+  const cuando =
+    r.fecha === hoy
+      ? 'de hoy'
+      : r.fecha === addDays(hoy, 1)
+        ? 'de mañana'
+        : `del ${formatFecha(r.fecha)}`;
   const pago = r.pagado === true ? 'Pagado. ¡Muchas gracias!' : 'Pago pendiente';
   return [
     `¡Hola, ${r.nombre}! 🤍`,
