@@ -49,6 +49,11 @@ service cloud.firestore {
       allow read, update, delete: if isAdmin();
     }
 
+    // Dispositivos del panel que reciben notificaciones. Solo Grecia los registra; la función los lee con permisos de servidor.
+    match /tokens/{tokenId} {
+      allow read, create, update, delete: if isAdmin();
+    }
+
     // Citas ya atendidas y pagadas (archivo). Solo Grecia puede verlas o escribirlas.
     match /archivo/{reservaId} {
       allow read, create, update, delete: if isAdmin();

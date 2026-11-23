@@ -30,6 +30,7 @@ import {
 import Calendar from './Calendar';
 import Historial from './Historial';
 import Deudoras from './Deudoras';
+import { activarNotificaciones, notificacionesDisponibles } from '../lib/notificaciones';
 import ConfirmDialog from './ConfirmDialog';
 import AdminModal from './AdminModal';
 import AgendarClienta from './AgendarClienta';
@@ -306,6 +307,7 @@ export default function AdminPanel() {
   const [avisos, setAvisos] = useState([]); // avisos de días archivados, hasta que Grecia los cierre
   const [archivo, setArchivo] = useState([]); // clientas ya atendidas (colección archivo)
   const [pestana, setPestana] = useState('agenda'); // sección visible: 'agenda' | 'historial'
+  const [notifEstado, setNotifEstado] = useState('inactivas'); // avisos push: inactivas | activando | activas | bloqueadas | error
   const archivando = useRef(new Set()); // días que se están archivando (evita repetir)
 
   const isAdmin = Boolean(user && user.email === ADMIN_EMAIL && user.emailVerified);
@@ -556,9 +558,37 @@ export default function AdminPanel() {
     <section className="mx-auto max-w-5xl px-4 py-32">
       <div className="flex items-center justify-between">
         <h1 className="font-serif text-3xl">Panel de citas</h1>
-        <button type="button" onClick={() => signOut(auth)} className="text-xs uppercase tracking-widest text-accent hover:text-ink">
-          Cerrar sesión
-        </button>
+        <div className="flex items-center gap-5">
+          {notificacionesDisponibles() && (
+            <button
+              type="button"
+              disabled={notifEstado === 'activas'}
+              onClick={async () => {
+                setNotifEstado('activando');
+                try {
+                  await activarNotificaciones(user.email);
+                  setNotifEstado('activas');
+                } catch (err) {
+                  setNotifEstado(err.message === 'sin-permiso' ? 'bloqueadas' : 'error');
+                }
+              }}
+              className="text-xs uppercase tracking-widest text-accent hover:text-ink disabled:opacity-60"
+            >
+              {notifEstado === 'activas'
+                ? 'Avisos activos'
+                : notifEstado === 'activando'
+                  ? 'Activando…'
+                  : notifEstado === 'bloqueadas'
+                    ? 'Avisos bloqueados'
+                    : notifEstado === 'error'
+                      ? 'Reintentar avisos'
+                      : 'Activar avisos'}
+            </button>
+          )}
+          <button type="button" onClick={() => signOut(auth)} className="text-xs uppercase tracking-widest text-accent hover:text-ink">
+            Cerrar sesión
+          </button>
+        </div>
       </div>
 
       <nav aria-label="Secciones del panel" className="mt-8 flex gap-2 border-b border-ink/10 pb-3 text-xs uppercase tracking-widest">
