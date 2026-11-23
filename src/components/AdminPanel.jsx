@@ -723,10 +723,10 @@ export default function AdminPanel() {
 
           {dayAvailable && (
             <>
-              <div className="mt-4 flex items-center gap-3 text-sm">
+              <div className="mt-4 flex flex-wrap items-center gap-3 text-sm">
                 <select
                   aria-label="Qué bloquear"
-                  className="rounded-xl border border-ink/20 bg-white px-3 py-2 text-sm"
+                  className="min-w-0 flex-1 rounded-xl border border-ink/20 bg-white px-3 py-2 text-sm sm:flex-none"
                   value={grupoSel}
                   onChange={(e) => setGrupoSel(e.target.value)}
                 >
@@ -739,7 +739,7 @@ export default function AdminPanel() {
                 <button
                   type="button"
                   onClick={() => setBloqueo({ tipo: 'bloquear', grupo: grupoSel })}
-                  className="btn-fill px-5 py-2 text-xs"
+                  className="btn-fill shrink-0 whitespace-nowrap px-5 py-2 text-xs"
                 >
                   Bloquear
                 </button>
@@ -747,7 +747,7 @@ export default function AdminPanel() {
                   type="button"
                   onClick={() => setBloqueo({ tipo: 'desbloquear', grupo: grupoSel })}
                   disabled={bloqueosDeGrupo(grupoSel).length === 0}
-                  className="rounded-full border border-ink/30 px-5 py-2 text-xs uppercase tracking-widest transition hover:bg-mist disabled:opacity-40 disabled:hover:bg-transparent"
+                  className="shrink-0 whitespace-nowrap rounded-full border border-ink/30 px-5 py-2 text-xs uppercase tracking-widest transition hover:bg-mist disabled:opacity-40 disabled:hover:bg-transparent"
                 >
                   Desbloquear
                 </button>
