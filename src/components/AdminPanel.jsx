@@ -961,22 +961,24 @@ export default function AdminPanel() {
 
       {/* Pregunta única para activar avisos. Solo se muestra si el celular todavía no decidió. */}
       {preguntarAvisos && (
-        <div role="dialog" aria-label="Avisos de solicitudes" className="fixed inset-x-4 bottom-6 z-[65] mx-auto max-w-sm rounded-2xl bg-paper p-5 shadow-xl ring-1 ring-mist">
-          <p className="font-serif text-2xl">Avisos de solicitudes</p>
-          <p className="mt-2 text-sm text-ink/80">
-            ¿Quieres que te avisemos en este celular cuando una clienta pida una cita?
-          </p>
-          <div className="mt-5 flex gap-3">
-            <button type="button" onClick={() => responderPregunta(true)} className="btn-fill px-5 py-2 text-xs">
-              Sí, avisarme
-            </button>
-            <button
-              type="button"
-              onClick={() => responderPregunta(false)}
-              className="rounded-full border border-ink/30 px-5 py-2 text-xs uppercase tracking-widest transition hover:bg-mist"
-            >
-              Ahora no
-            </button>
+        <div className="fixed inset-0 z-[65] flex items-center justify-center bg-ink/60 p-4">
+          <div role="dialog" aria-modal="true" aria-labelledby="pregunta-avisos" className="w-full max-w-sm rounded-2xl bg-paper p-6 text-center shadow-xl">
+            <p id="pregunta-avisos" className="font-serif text-3xl">¿Activar notificaciones?</p>
+            <p className="mt-3 text-sm text-ink/80">
+              Te avisamos en este celular cuando una clienta pida una cita, para que la confirmes al momento.
+            </p>
+            <div className="mt-6 flex flex-col gap-3">
+              <button type="button" onClick={() => responderPregunta(true)} className="btn-fill w-full py-3 text-xs">
+                Sí, activar
+              </button>
+              <button
+                type="button"
+                onClick={() => responderPregunta(false)}
+                className="w-full rounded-full border border-ink/30 py-3 text-xs uppercase tracking-widest transition hover:bg-mist"
+              >
+                Ahora no
+              </button>
+            </div>
           </div>
         </div>
       )}
