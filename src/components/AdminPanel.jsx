@@ -29,6 +29,7 @@ import {
 } from '../lib/schedule';
 import Calendar from './Calendar';
 import Historial from './Historial';
+import Deudoras from './Deudoras';
 import ConfirmDialog from './ConfirmDialog';
 import AdminModal from './AdminModal';
 import AgendarClienta from './AgendarClienta';
@@ -564,6 +565,7 @@ export default function AdminPanel() {
         {[
           ['agenda', 'Agenda'],
           ['historial', 'Historial'],
+          ['cobrar', 'Por cobrar'],
         ].map(([id, texto]) => (
           <button
             key={id}
@@ -812,6 +814,8 @@ export default function AdminPanel() {
           ))}
         </div>
       )}
+
+      {pestana === 'cobrar' && <Deudoras reservas={reservas} onPagar={cambiarPago} />}
 
       {pestana === 'historial' && (
         <section className="mt-10">
