@@ -700,7 +700,7 @@ export default function AdminPanel() {
                       <button
                         type="button"
                         onClick={() => confirmar(r)}
-                        className="btn-fill flex-1 whitespace-nowrap px-2 py-1.5 text-[11px] tracking-wider sm:flex-none sm:px-3 sm:text-xs"
+                        className="btn-fill flex-1 whitespace-nowrap px-2 py-1.5 text-[11px] normal-case tracking-normal sm:flex-none sm:px-3 sm:text-xs"
                       >
                         Confirmar
                       </button>
