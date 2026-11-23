@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { GoogleAuthProvider, onAuthStateChanged, signInWithPopup, signOut } from 'firebase/auth';
 import { collection, doc, getDocs, onSnapshot, query, updateDoc, where } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
-import { ADMIN_EMAIL } from '../lib/admin';
+import { esAdmin } from '../lib/admin';
 import {
   bloquearRango,
   createReserva,
@@ -310,7 +310,7 @@ export default function AdminPanel() {
   const [notifEstado, setNotifEstado] = useState('inactivas'); // avisos push: inactivas | activando | activas | bloqueadas | error
   const archivando = useRef(new Set()); // días que se están archivando (evita repetir)
 
-  const isAdmin = Boolean(user && user.email === ADMIN_EMAIL && user.emailVerified);
+  const isAdmin = esAdmin(user);
 
   useEffect(() => onAuthStateChanged(auth, setUser), []);
 

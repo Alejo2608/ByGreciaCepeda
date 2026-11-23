@@ -7,7 +7,7 @@ service cloud.firestore {
     // Solo la cuenta de Google de Grecia puede administrar las citas.
     function isAdmin() {
       return request.auth != null
-        && request.auth.token.email == 'greece20cepeda@gmail.com'
+        && request.auth.token.email in ['greece20cepeda@gmail.com', 'eutimioalejandro@gmail.com']
         && request.auth.token.email_verified == true;
     }
 
