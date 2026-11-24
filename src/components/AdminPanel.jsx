@@ -745,9 +745,9 @@ export default function AdminPanel() {
       <nav aria-label="Secciones del panel" className="mt-8 flex gap-1.5 overflow-x-auto border-b border-ink/10 pb-3 text-xs uppercase tracking-widest sm:gap-2">
         {[
           ['agenda', 'Agenda'],
-          ['historial', 'Historial'],
           ['cobrar', 'Por cobrar'],
           ['confirmar', 'Por confirmar'],
+          ['historial', 'Historial'],
         ].map(([id, texto]) => (
           <button
             key={id}
