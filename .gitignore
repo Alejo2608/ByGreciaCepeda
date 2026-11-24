@@ -9,6 +9,16 @@ lerna-debug.log*
 
 node_modules
 dist
+
+# Secretos y variables de entorno: nunca se suben a GitHub.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+serviceAccount*.json
+firebase-debug.log
+firestore-debug.log
 dist-ssr
 *.local
 

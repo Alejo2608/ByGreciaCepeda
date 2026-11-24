@@ -25,7 +25,18 @@ messaging.onBackgroundMessage((payload) => {
   });
 });
 
+// Solo se abren enlaces del mismo sitio: así un mensaje manipulado no puede llevar a otra página.
+const INICIO_PANEL = 'https://bygreciacepeda.site/#admin';
+function enlaceSeguro(url) {
+  try {
+    return new URL(url, self.location.origin).origin === self.location.origin ? url : INICIO_PANEL;
+  } catch {
+    return INICIO_PANEL;
+  }
+}
+
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  event.waitUntil(clients.openWindow(event.notification.data?.url ?? 'https://bygreciacepeda.site/#admin'));
+  const url = enlaceSeguro(event.notification.data?.url ?? INICIO_PANEL);
+  event.waitUntil(clients.openWindow(url));
 });

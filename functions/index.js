@@ -5,12 +5,14 @@
 const { onDocumentCreated } = require('firebase-functions/v2/firestore');
 const { onSchedule } = require('firebase-functions/v2/scheduler');
 const { initializeApp } = require('firebase-admin/app');
-const { getFirestore, FieldValue } = require('firebase-admin/firestore');
+const { getFirestore, FieldValue, Timestamp } = require('firebase-admin/firestore');
 const { getMessaging } = require('firebase-admin/messaging');
 
 initializeApp();
 
 const SITIO = 'https://bygreciacepeda.site/#admin';
+// Más de esta cantidad de solicitudes en 10 minutos se registra como actividad sospechosa.
+const UMBRAL_SOLICITUDES_10_MIN = 15;
 
 // Guarda un aviso en la campana del panel.
 async function guardarAviso(datos) {
@@ -97,6 +99,15 @@ exports.avisoNuevaSolicitud = onDocumentCreated('reservas/{reservaId}', async (e
   const r = event.data?.data();
   // Solo las solicitudes de clientas (pendientes). Las citas que Grecia agenda a mano no avisan.
   if (!r || r.estado !== 'pendiente') return;
+
+  // Vigilancia: si llegan muchísimas solicitudes en poco tiempo, queda registrado como actividad sospechosa.
+  // Se ve en Firebase → Functions → Logs (buscar "ACTIVIDAD SOSPECHOSA").
+  const hace10Min = Timestamp.fromMillis(Date.now() - 10 * 60 * 1000);
+  const recientes = await getFirestore().collection('reservas').where('creado', '>=', hace10Min).count().get();
+  const total = recientes.data().count;
+  if (total > UMBRAL_SOLICITUDES_10_MIN) {
+    console.warn(`ACTIVIDAD SOSPECHOSA: ${total} solicitudes en los últimos 10 minutos (reserva ${event.params.reservaId}).`);
+  }
 
   const titulo = 'Nueva solicitud de cita';
   const texto = `${r.nombre} · ${r.servicio}${r.adicional ? ` + ${r.adicional}` : ''} · ${r.fecha} ${r.hora}`;

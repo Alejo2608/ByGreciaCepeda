@@ -1,37 +1,55 @@
 rules_version = '2';
 
-// Reglas de Cloud Firestore. Pégalas en Firebase Console → Firestore Database → Reglas.
+// Reglas de Cloud Firestore. Se despliegan con: firebase deploy --only firestore:rules
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Solo la cuenta de Google de Grecia puede administrar las citas.
+    // Solo la cuenta de Google de Grecia (con correo verificado) puede administrar las citas.
     function isAdmin() {
       return request.auth != null
         && request.auth.token.email in ['greece20cepeda@gmail.com', 'eutimioalejandro@gmail.com']
         && request.auth.token.email_verified == true;
     }
 
-    // Revisa que la solicitud tenga datos razonables. Se deja un día de margen por la diferencia de zona horaria.
+    // Revisa que una solicitud de clienta tenga datos razonables y tamaños acotados.
+    // Se deja un día de margen por la diferencia de zona horaria.
     function solicitudValida(data) {
       let partes = data.fecha.split('-');
       let fecha = timestamp.date(int(partes[0]), int(partes[1]), int(partes[2]));
-      return data.fecha.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+      return data.fecha is string
+        && data.fecha.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
         && fecha >= request.time.date() - duration.value(1, 'd')
         && fecha <= request.time.date() + duration.value(22, 'd')
         && !data.fecha.matches('^[0-9]{4}-(12-25|01-01|01-02)$')
         && (data.preferencias != null || !data.fecha.matches('^[0-9]{4}-12-(24|31)$'))
+        && data.hora is string
         && data.hora.matches('^([01][0-9]|2[0-3]):[0-5][0-9]$')
         && data.nombre is string
         && data.nombre.size() >= 2 && data.nombre.size() <= 60
-        && data.telefono.matches('^[0-9+ ()-]{7,20}$');
+        && data.telefono is string
+        && data.telefono.matches('^[0-9+ ()-]{7,20}$')
+        && data.servicio is string && data.servicio.size() >= 1 && data.servicio.size() <= 120
+        && data.precio is string && data.precio.size() <= 40
+        && data.duracion is string && data.duracion.size() <= 40
+        && (!('adicional' in data) || (data.adicional is string && data.adicional.size() <= 160))
+        && (!('instagram' in data) || (data.instagram is string && data.instagram.size() <= 60))
+        && (!('datos' in data) || (data.datos is string && data.datos.size() <= 1000))
+        && (data.preferencias == null || (data.preferencias is map && data.preferencias.size() <= 20))
+        && data.slots is list && data.slots.size() >= 1 && data.slots.size() <= 60;
     }
 
-    // Turnos de 30 minutos. Cualquiera ve los horarios ocupados; cada turno se crea una sola vez.
+    // Turnos de 30 minutos (id = "AAAA-MM-DD_HH:MM"). Cualquiera ve los horarios ocupados;
+    // una clienta solo puede crear un turno libre con formato correcto, y nunca cambiarlo ni borrarlo.
     match /slots/{slotId} {
       allow read: if true;
       allow create: if isAdmin() || (
         !exists(/databases/$(database)/documents/slots/$(slotId))
+        && slotId.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}_([01][0-9]|2[0-3]):[0-5][0-9]$')
         && request.resource.data.keys().hasOnly(['fecha', 'hora', 'reservaId'])
+        && request.resource.data.fecha == slotId.split('_')[0]
+        && request.resource.data.hora == slotId.split('_')[1]
+        && request.resource.data.reservaId is string
+        && request.resource.data.reservaId.size() <= 40
       );
       allow update, delete: if isAdmin();
     }
@@ -62,6 +80,11 @@ service cloud.firestore {
     // Citas ya atendidas y pagadas (archivo). Solo Grecia puede verlas o escribirlas.
     match /archivo/{reservaId} {
       allow read, create, update, delete: if isAdmin();
+    }
+
+    // Cualquier otra ruta queda cerrada.
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }
