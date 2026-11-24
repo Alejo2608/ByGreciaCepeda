@@ -57,6 +57,9 @@ export default function BookingDialog({ open, onClose, service, preferences = fa
   // Epilación: la clienta elige entre epilación con henna (10 USD) o solo epilación con diseño (6 USD).
   const [variante, setVariante] = useState('henna');
   const formRef = useRef(null);
+  // Después del primer intento de continuar se marcan en rojo los datos que faltan.
+  const [intentoPaso1, setIntentoPaso1] = useState(false);
+  const [intentoPaso2, setIntentoPaso2] = useState(false);
   const esEpilacion = service.name === 'Epilación con henna';
   const svcBase = esEpilacion && variante === 'diseno' ? { ...service, name: 'Epilación con diseño', price: '6 USD' } : service;
   // Pestañas: se puede sumar una epilación sin cambiar el tiempo de la cita (las 2 horas siguen igual).
@@ -64,6 +67,7 @@ export default function BookingDialog({ open, onClose, service, preferences = fa
   const ADICIONALES = {
     henna: { nombre: 'Epilación con henna', precio: 10 },
     diseno: { nombre: 'Epilación con diseño', precio: 6 },
+    lamination: { nombre: 'Brows lamination', precio: 25 },
   };
   const extra = withAddon && addon !== 'ninguna' ? ADICIONALES[addon] : null;
   const svc = extra
@@ -85,18 +89,36 @@ export default function BookingDialog({ open, onClose, service, preferences = fa
   // Turnos ocupados de las próximas 3 semanas, para desactivar en el calendario los días sin horarios.
   // Hasta que llegan los turnos, ningún día se puede elegir (null = todavía cargando).
   const [rango, setRango] = useState(null);
+  const [errorRango, setErrorRango] = useState(false);
+  // Cuenta los intentos de carga: si falla, se reintenta solo un par de veces antes de mostrar el error.
+  const [intentoRango, setIntentoRango] = useState(0);
   useEffect(() => {
     if (!open) return undefined;
     let cancelled = false;
+    let reintento;
     getDocs(query(collection(db, 'slots'), where('fecha', '>=', todayISO()), where('fecha', '<=', maxBookingISO())))
       .then((snap) => {
-        if (!cancelled) setRango(new Set(snap.docs.map((d) => d.id)));
+        if (!cancelled) {
+          setRango(new Set(snap.docs.map((d) => d.id)));
+          setErrorRango(false);
+        }
       })
-      .catch(() => {});
+      .catch(() => {
+        if (cancelled) return;
+        if (intentoRango < 2) reintento = setTimeout(() => setIntentoRango((n) => n + 1), 1500);
+        else setErrorRango(true);
+      });
     return () => {
       cancelled = true;
+      clearTimeout(reintento);
     };
-  }, [open]);
+  }, [open, intentoRango]);
+
+  const reintentarCalendario = () => {
+    setRango(null);
+    setErrorRango(false);
+    setIntentoRango(0);
+  };
 
   // Turnos ya ocupados o apartados de la fecha elegida (y de los días siguientes, si es un curso).
   useEffect(() => {
@@ -175,9 +197,19 @@ export default function BookingDialog({ open, onClose, service, preferences = fa
     return `${dias.join(' y ')}, de ${formatHour(bloque.inicio)} a ${formatHour(bloque.fin)}`;
   };
 
+  // Datos del paso 1 que todavía faltan. Se marcan en rojo después de intentar continuar.
+  const faltantes = [
+    !nombre.trim() && 'nombre',
+    !form.telefono.trim() && 'teléfono',
+    !fecha && 'fecha',
+    !selected && (bloque ? 'horario' : 'hora'),
+  ].filter(Boolean);
+  const marcarFalta = (campo) => intentoPaso1 && faltantes.includes(campo);
+
   const goToStep2 = () => {
-    if (!nombre.trim() || !form.telefono.trim() || !fecha || !selected) {
-      setError('Escribe tu nombre y teléfono, y elige una fecha y una hora.');
+    setIntentoPaso1(true);
+    if (faltantes.length > 0) {
+      setError(`Falta: ${faltantes.join(', ')}.`);
       return;
     }
     setError('');
@@ -246,10 +278,17 @@ export default function BookingDialog({ open, onClose, service, preferences = fa
     }
   };
 
+  // Preguntas de la encuesta (maquillaje) que todavía no tienen respuesta.
+  const sinResponder = preferences ? questions.filter((q) => !form[q.key]) : [];
+
   const submit = (e) => {
     e.preventDefault();
+    setIntentoPaso2(true);
+    if (sinResponder.length > 0) {
+      setError(`Falta responder: ${sinResponder.map((q) => q.label).join(' · ')}`);
+      return;
+    }
     setError('');
-    if (!formRef.current.reportValidity()) return;
     send();
   };
 
@@ -280,12 +319,13 @@ export default function BookingDialog({ open, onClose, service, preferences = fa
         </p>
         {withAddon && !sent && (
           <fieldset className="mt-5">
-            <legend className="text-xs uppercase tracking-widest text-accent">¿Quieres agregar una epilación?</legend>
-            <div className="mt-3 grid grid-cols-3 gap-2">
+            <legend className="text-xs uppercase tracking-widest text-accent">¿Quieres agregar algo a tu cita?</legend>
+            <div className="mt-3 grid grid-cols-2 gap-2">
               {[
                 ['ninguna', 'Sin epilación', ''],
-                ['henna', 'Con henna', '+10 USD'],
-                ['diseno', 'Con diseño', '+6 USD'],
+                ['henna', 'Epilación con henna', '+10 USD'],
+                ['diseno', 'Epilación con diseño', '+6 USD'],
+                ['lamination', 'Brows lamination', '+25 USD'],
               ].map(([id, nombre, precio]) => (
                 <label
                   key={id}
@@ -369,11 +409,20 @@ export default function BookingDialog({ open, onClose, service, preferences = fa
           <div className="mt-6 space-y-6">
             <label className="block text-sm">
               Nombre del cliente
-              <input className={inputClass} value={nombre} onChange={(e) => setNombre(e.target.value)} />
+              <input
+                className={`${inputClass} ${marcarFalta('nombre') ? 'border-red-600 ring-1 ring-red-600' : ''}`}
+                value={nombre}
+                onChange={(e) => setNombre(e.target.value)}
+              />
             </label>
             <label className="block text-sm">
               Teléfono
-              <input type="tel" className={inputClass} value={form.telefono} onChange={update('telefono')} />
+              <input
+                type="tel"
+                className={`${inputClass} ${marcarFalta('teléfono') ? 'border-red-600 ring-1 ring-red-600' : ''}`}
+                value={form.telefono}
+                onChange={update('telefono')}
+              />
             </label>
             <label className="block text-sm">
               Usuario de Instagram <span className="text-accent">(opcional)</span>
@@ -398,7 +447,17 @@ export default function BookingDialog({ open, onClose, service, preferences = fa
                   }
                 />
               </div>
+              {rango === null && !errorRango && <p className="mt-2 text-sm text-accent">Cargando calendario…</p>}
+              {errorRango && (
+                <p className="mt-2 text-sm text-accent">
+                  No pudimos cargar el calendario.{' '}
+                  <button type="button" onClick={reintentarCalendario} className="underline underline-offset-4">
+                    Reintentar
+                  </button>
+                </p>
+              )}
               <p className="mt-2 text-xs text-accent">Puedes agendar hasta 3 semanas desde hoy.</p>
+              {marcarFalta('fecha') && <p className="mt-2 text-sm font-medium text-red-600">Elige una fecha.</p>}
               {fecha && !openDay(fecha) && (
                 <p className="mt-2 text-sm text-accent">Ese día no hay atención para este servicio.</p>
               )}
@@ -406,7 +465,10 @@ export default function BookingDialog({ open, onClose, service, preferences = fa
 
             {fecha && openDay(fecha) && (
               <fieldset>
-                <legend className="text-sm">{bloque ? 'Horario del curso' : 'Hora disponible'}</legend>
+                <legend className={`text-sm ${marcarFalta(bloque ? 'horario' : 'hora') ? 'text-red-600' : ''}`}>
+                  {bloque ? 'Horario del curso' : 'Hora disponible'}
+                  {marcarFalta(bloque ? 'horario' : 'hora') && ' · elige una hora'}
+                </legend>
                 {cargando && <p className="mt-2 text-sm text-accent">Cargando horarios…</p>}
                 {errorCarga && <p className="mt-2 text-sm text-accent">No pudimos cargar los horarios. Intenta de nuevo.</p>}
                 {!cargando && !errorCarga && availableTimes.length === 0 && (
@@ -441,12 +503,16 @@ export default function BookingDialog({ open, onClose, service, preferences = fa
               </fieldset>
             )}
 
-            {error && <p className="rounded-xl bg-accent/10 px-4 py-3 text-sm text-ink">{error}</p>}
+            {error && (
+              <p className="rounded-xl bg-red-50 px-4 py-3 text-xs uppercase leading-relaxed tracking-widest text-red-700">
+                {error}
+              </p>
+            )}
 
             <button
               type="button"
               onClick={goToStep2}
-              disabled={loading || !fecha || !selected}
+              disabled={loading}
               className="btn-fill w-full disabled:opacity-50"
             >
               {preferences ? 'Continuar' : 'Solicitar cita'}
@@ -470,7 +536,9 @@ export default function BookingDialog({ open, onClose, service, preferences = fa
             {preferences &&
               questions.map((q) => (
                 <fieldset key={q.key}>
-                  <legend className="text-sm">{q.label}</legend>
+                  <legend className={`text-sm ${intentoPaso2 && !form[q.key] ? 'font-medium text-red-600' : ''}`}>
+                    {q.label}
+                  </legend>
                   <div className="mt-2 space-y-2">
                     {q.options.map((option) => (
                       <label
@@ -499,7 +567,11 @@ export default function BookingDialog({ open, onClose, service, preferences = fa
               <textarea rows={3} className={inputClass} value={form.extra} onChange={update('extra')} />
             </label>
 
-            {error && <p className="rounded-xl bg-accent/10 px-4 py-3 text-sm text-ink">{error}</p>}
+            {error && (
+              <p className="rounded-xl bg-red-50 px-4 py-3 text-xs uppercase leading-relaxed tracking-widest text-red-700">
+                {error}
+              </p>
+            )}
 
             <button type="submit" disabled={loading} className="btn-fill w-full disabled:opacity-50">
               Solicitar cita
