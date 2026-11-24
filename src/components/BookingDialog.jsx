@@ -54,7 +54,11 @@ export default function BookingDialog({ open, onClose, service, preferences = fa
   const [form, setForm] = useState(emptyForm);
   const [error, setError] = useState('');
   const [sent, setSent] = useState(null);
+  // Epilación: la clienta elige entre epilación con henna (10 USD) o solo epilación con diseño (6 USD).
+  const [variante, setVariante] = useState('henna');
   const formRef = useRef(null);
+  const esEpilacion = service.name === 'Epilación con henna';
+  const svc = esEpilacion && variante === 'diseno' ? { ...service, name: 'Epilación con diseño', price: '6 USD' } : service;
   const bloque = service.bloque;
   const minutes = durationMinutes(service.duration);
   // Maquillaje atiende 24 y 31 de diciembre; maquillaje y cursos atienden los domingos.
@@ -187,7 +191,7 @@ export default function BookingDialog({ open, onClose, service, preferences = fa
       ? 'Encuesta de Preferencias\n\n' + questions.map((q) => `•${q.message}\nRespuesta: ${form[q.key]}`).join('\n\n')
       : '';
     const extra = form.extra.trim() && `Datos adicionales que desees añadir en tu servicio⬇️\n${form.extra.trim()}`;
-    return [`Hola Grecia✨quiero agendar contigo un ${service.name} (${service.price})`, details, prefs, extra]
+    return [`Hola Grecia✨quiero agendar contigo un ${svc.name} (${svc.price})`, details, prefs, extra]
       .filter(Boolean)
       .join('\n\n');
   };
@@ -195,8 +199,8 @@ export default function BookingDialog({ open, onClose, service, preferences = fa
   const send = async () => {
     setError('');
     const data = {
-      servicio: service.name,
-      precio: service.price,
+      servicio: svc.name,
+      precio: svc.price,
       duracion: service.duration,
       fecha,
       hora: selected,
@@ -252,12 +256,40 @@ export default function BookingDialog({ open, onClose, service, preferences = fa
         </button>
 
         <h2 id="booking-title" className="font-serif text-3xl leading-tight">
-          {service.name}
+          {svc.name}
         </h2>
         <p className="mt-1 text-xs uppercase tracking-widest text-accent">
-          {service.price}
+          {svc.price}
           {bloque && ` · ${service.duration}`}
         </p>
+        {esEpilacion && (
+          <fieldset className="mt-4">
+            <legend className="text-sm">¿Qué quieres hacerte?</legend>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {[
+                ['henna', 'Epilación con henna · 10 USD'],
+                ['diseno', 'Solo epilación con diseño · 6 USD'],
+              ].map(([id, texto]) => (
+                <label
+                  key={id}
+                  className={`cursor-pointer rounded-full px-4 py-2 text-sm transition ${
+                    variante === id ? 'bg-ink text-paper' : 'border border-ink/30 hover:bg-mist'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="variante-epilacion"
+                    value={id}
+                    checked={variante === id}
+                    onChange={() => setVariante(id)}
+                    className="sr-only"
+                  />
+                  {texto}
+                </label>
+              ))}
+            </div>
+          </fieldset>
+        )}
 
         {sent && (
           <div className="mt-6 space-y-4 text-sm leading-relaxed">
