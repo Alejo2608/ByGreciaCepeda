@@ -263,17 +263,17 @@ export default function BookingDialog({ open, onClose, service, preferences = fa
           {bloque && ` · ${service.duration}`}
         </p>
         {esEpilacion && (
-          <fieldset className="mt-4">
-            <legend className="text-sm">¿Qué quieres hacerte?</legend>
-            <div className="mt-2 flex flex-wrap gap-2">
+          <fieldset className="mt-5">
+            <legend className="text-xs uppercase tracking-widest text-accent">¿Qué quieres hacerte?</legend>
+            <div className="mt-3 grid grid-cols-2 gap-3">
               {[
-                ['henna', 'Epilación con henna · 10 USD'],
-                ['diseno', 'Solo epilación con diseño · 6 USD'],
-              ].map(([id, texto]) => (
+                ['henna', 'Epilación con henna', '10 USD'],
+                ['diseno', 'Solo epilación con diseño', '6 USD'],
+              ].map(([id, nombre, precio]) => (
                 <label
                   key={id}
-                  className={`cursor-pointer rounded-full px-4 py-2 text-sm transition ${
-                    variante === id ? 'bg-ink text-paper' : 'border border-ink/30 hover:bg-mist'
+                  className={`flex cursor-pointer flex-col gap-1 rounded-2xl px-4 py-4 transition ${
+                    variante === id ? 'bg-ink text-paper shadow-md' : 'bg-white/70 ring-1 ring-mist hover:bg-mist'
                   }`}
                 >
                   <input
@@ -284,7 +284,12 @@ export default function BookingDialog({ open, onClose, service, preferences = fa
                     onChange={() => setVariante(id)}
                     className="sr-only"
                   />
-                  {texto}
+                  <span className="font-serif text-lg leading-tight">{nombre}</span>
+                  <span
+                    className={`text-xs uppercase tracking-widest ${variante === id ? 'text-paper/80' : 'text-accent'}`}
+                  >
+                    {precio}
+                  </span>
                 </label>
               ))}
             </div>
