@@ -278,10 +278,9 @@ export default function BookingDialog({ open, onClose, service, preferences = fa
           {svc.price}
           {bloque && ` · ${service.duration}`}
         </p>
-        {withAddon && (
+        {withAddon && !sent && (
           <fieldset className="mt-5">
             <legend className="text-xs uppercase tracking-widest text-accent">¿Quieres agregar una epilación?</legend>
-            <p className="mt-1 text-xs text-accent">Se hace en la misma cita, sin cambiar el tiempo.</p>
             <div className="mt-3 grid grid-cols-3 gap-2">
               {[
                 ['ninguna', 'Sin epilación', ''],
@@ -290,7 +289,7 @@ export default function BookingDialog({ open, onClose, service, preferences = fa
               ].map(([id, nombre, precio]) => (
                 <label
                   key={id}
-                  className={`flex cursor-pointer flex-col gap-1 rounded-2xl px-3 py-3 transition ${
+                  className={`flex min-h-[5.5rem] cursor-pointer flex-col items-center justify-center gap-1 rounded-2xl px-3 py-3 text-center transition ${
                     addon === id ? 'bg-ink text-paper shadow-md' : 'bg-white/70 ring-1 ring-mist hover:bg-mist'
                   }`}
                 >
@@ -313,7 +312,7 @@ export default function BookingDialog({ open, onClose, service, preferences = fa
             </div>
           </fieldset>
         )}
-        {esEpilacion && (
+        {esEpilacion && !sent && (
           <fieldset className="mt-5">
             <legend className="text-xs uppercase tracking-widest text-accent">¿Qué quieres hacerte?</legend>
             <div className="mt-3 grid grid-cols-2 gap-3">
@@ -444,7 +443,12 @@ export default function BookingDialog({ open, onClose, service, preferences = fa
 
             {error && <p className="rounded-xl bg-accent/10 px-4 py-3 text-sm text-ink">{error}</p>}
 
-            <button type="button" onClick={goToStep2} disabled={loading} className="btn-fill w-full disabled:opacity-50">
+            <button
+              type="button"
+              onClick={goToStep2}
+              disabled={loading || !fecha || !selected}
+              className="btn-fill w-full disabled:opacity-50"
+            >
               {preferences ? 'Continuar' : 'Solicitar cita'}
             </button>
           </div>
