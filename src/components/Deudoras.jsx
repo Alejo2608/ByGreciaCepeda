@@ -102,7 +102,8 @@ export default function Deudoras({ reservas, onPagar, onRecordar }) {
                       {formatFecha(r.fecha)} · {formatHour(r.hora)}
                     </p>
                     <p className="text-xs text-accent">
-                      {r.servicio} · {r.precio}
+                      {r.servicio}
+                      {r.adicional ? ` + ${r.adicional}` : ''} · {r.precio}
                     </p>
                   </div>
                   <div className="flex shrink-0 items-center gap-2">

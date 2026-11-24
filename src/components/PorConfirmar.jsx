@@ -43,7 +43,8 @@ export default function PorConfirmar({ reservas, onConfirmar, onLiberar }) {
                       {formatHour(r.hora)} · {r.nombre}
                     </p>
                     <p className="text-sm text-accent">
-                      {r.servicio} · {r.telefono}
+                      {r.servicio}
+                      {r.adicional ? ` + ${r.adicional}` : ''} · {r.telefono}
                     </p>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">

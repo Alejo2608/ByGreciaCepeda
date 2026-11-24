@@ -15,6 +15,7 @@ export default function ServiceCard({
   withDiscount,
   withForm,
   allowSunday,
+  withAddon,
   bloque,
   imageClass = 'aspect-[4/3] object-cover',
   ...service
@@ -193,6 +194,7 @@ export default function ServiceCard({
         service={item}
         preferences={Boolean(withForm)}
         allowSunday={Boolean(withForm) || Boolean(allowSunday)}
+        withAddon={Boolean(withAddon)}
       />
     </article>
   );

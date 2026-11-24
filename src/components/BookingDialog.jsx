@@ -43,7 +43,7 @@ const inputClass = 'mt-2 w-full rounded-xl border border-ink/20 bg-white px-4 py
 // Reserva en dos pasos: 1) nombre, fecha y hora; 2) teléfono y datos. Al enviar, la hora queda apartada
 // como pendiente y se muestra el enlace para mandarle la solicitud a Grecia por WhatsApp.
 // Los cursos (service.bloque) no eligen hora: ocupan la misma franja en cada uno de sus días.
-export default function BookingDialog({ open, onClose, service, preferences = false, allowSunday = false }) {
+export default function BookingDialog({ open, onClose, service, preferences = false, allowSunday = false, withAddon = false }) {
   const [step, setStep] = useState(1);
   const [nombre, setNombre] = useState('');
   const [fecha, setFecha] = useState('');
@@ -58,7 +58,17 @@ export default function BookingDialog({ open, onClose, service, preferences = fa
   const [variante, setVariante] = useState('henna');
   const formRef = useRef(null);
   const esEpilacion = service.name === 'Epilación con henna';
-  const svc = esEpilacion && variante === 'diseno' ? { ...service, name: 'Epilación con diseño', price: '6 USD' } : service;
+  const svcBase = esEpilacion && variante === 'diseno' ? { ...service, name: 'Epilación con diseño', price: '6 USD' } : service;
+  // Pestañas: se puede sumar una epilación sin cambiar el tiempo de la cita (las 2 horas siguen igual).
+  const [addon, setAddon] = useState('ninguna');
+  const ADICIONALES = {
+    henna: { nombre: 'Epilación con henna', precio: 10 },
+    diseno: { nombre: 'Epilación con diseño', precio: 6 },
+  };
+  const extra = withAddon && addon !== 'ninguna' ? ADICIONALES[addon] : null;
+  const svc = extra
+    ? { ...svcBase, price: `${parseFloat(svcBase.price) + extra.precio} USD`, adicional: extra.nombre }
+    : svcBase;
   const bloque = service.bloque;
   const minutes = durationMinutes(service.duration);
   // Maquillaje atiende 24 y 31 de diciembre; maquillaje y cursos atienden los domingos.
@@ -190,8 +200,13 @@ export default function BookingDialog({ open, onClose, service, preferences = fa
     const prefs = preferences
       ? 'Encuesta de Preferencias\n\n' + questions.map((q) => `•${q.message}\nRespuesta: ${form[q.key]}`).join('\n\n')
       : '';
-    const extra = form.extra.trim() && `Datos adicionales que desees añadir en tu servicio⬇️\n${form.extra.trim()}`;
-    return [`Hola Grecia✨quiero agendar contigo un ${svc.name} (${svc.price})`, details, prefs, extra]
+    const extraTexto = form.extra.trim() && `Datos adicionales que desees añadir en tu servicio⬇️\n${form.extra.trim()}`;
+    return [
+      `Hola Grecia✨quiero agendar contigo un ${svc.name}${svc.adicional ? ` + ${svc.adicional}` : ''} (${svc.price})`,
+      details,
+      prefs,
+      extraTexto,
+    ]
       .filter(Boolean)
       .join('\n\n');
   };
@@ -200,6 +215,7 @@ export default function BookingDialog({ open, onClose, service, preferences = fa
     setError('');
     const data = {
       servicio: svc.name,
+      ...(svc.adicional ? { adicional: svc.adicional } : {}),
       precio: svc.price,
       duracion: service.duration,
       fecha,
@@ -262,6 +278,41 @@ export default function BookingDialog({ open, onClose, service, preferences = fa
           {svc.price}
           {bloque && ` · ${service.duration}`}
         </p>
+        {withAddon && (
+          <fieldset className="mt-5">
+            <legend className="text-xs uppercase tracking-widest text-accent">¿Quieres agregar una epilación?</legend>
+            <p className="mt-1 text-xs text-accent">Se hace en la misma cita, sin cambiar el tiempo.</p>
+            <div className="mt-3 grid grid-cols-3 gap-2">
+              {[
+                ['ninguna', 'Sin epilación', ''],
+                ['henna', 'Con henna', '+10 USD'],
+                ['diseno', 'Con diseño', '+6 USD'],
+              ].map(([id, nombre, precio]) => (
+                <label
+                  key={id}
+                  className={`flex cursor-pointer flex-col gap-1 rounded-2xl px-3 py-3 transition ${
+                    addon === id ? 'bg-ink text-paper shadow-md' : 'bg-white/70 ring-1 ring-mist hover:bg-mist'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="addon-pestanas"
+                    value={id}
+                    checked={addon === id}
+                    onChange={() => setAddon(id)}
+                    className="sr-only"
+                  />
+                  <span className="font-serif text-base leading-tight">{nombre}</span>
+                  {precio && (
+                    <span className={`text-xs uppercase tracking-widest ${addon === id ? 'text-paper/80' : 'text-accent'}`}>
+                      {precio}
+                    </span>
+                  )}
+                </label>
+              ))}
+            </div>
+          </fieldset>
+        )}
         {esEpilacion && (
           <fieldset className="mt-5">
             <legend className="text-xs uppercase tracking-widest text-accent">¿Qué quieres hacerte?</legend>

@@ -99,7 +99,7 @@ exports.avisoNuevaSolicitud = onDocumentCreated('reservas/{reservaId}', async (e
   if (!r || r.estado !== 'pendiente') return;
 
   const titulo = 'Nueva solicitud de cita';
-  const texto = `${r.nombre} · ${r.servicio} · ${r.fecha} ${r.hora}`;
+  const texto = `${r.nombre} · ${r.servicio}${r.adicional ? ` + ${r.adicional}` : ''} · ${r.fecha} ${r.hora}`;
   await guardarAviso({ tipo: 'solicitud', titulo, texto, fecha: r.fecha, hora: r.hora, reservaId: event.params.reservaId });
   await enviarPush({ titulo, texto, link: `${SITIO}?fecha=${r.fecha}` });
 });

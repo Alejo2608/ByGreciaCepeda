@@ -791,7 +791,8 @@ export default function AdminPanel() {
                         {formatHour(r.hora)} · {r.nombre}
                       </p>
                       <p className="mt-1 text-xs leading-relaxed text-accent">
-                        {r.servicio} · {r.duracion}
+                        {r.servicio}
+                        {r.adicional ? ` + ${r.adicional}` : ''} · {r.duracion}
                       </p>
                       <p className="text-xs leading-relaxed text-accent">
                         {r.telefono}

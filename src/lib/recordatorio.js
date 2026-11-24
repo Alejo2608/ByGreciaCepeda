@@ -16,7 +16,7 @@ export function mensajeRecordatorio(r) {
     '',
     `Te escribe Grecia Cepeda para recordarte tu cita ${cuando}.`,
     '',
-    `👁️ Servicio: ${r.servicio}`,
+    `👁️ Servicio: ${r.servicio}${r.adicional ? ` + ${r.adicional}` : ''}`,
     `🕒 Hora: ${formatHour(r.hora)}`,
     `💳 Pago: ${pago}`,
     '',
@@ -32,7 +32,11 @@ export function mensajePagoPendiente(nombre, citas, total) {
   // Ordenadas de la más vieja a la más reciente (fecha y luego hora).
   const ordenadas = [...citas].sort((a, b) => (a.fecha + a.hora).localeCompare(b.fecha + b.hora));
   const bloques = ordenadas.map((c) =>
-    [`👁️ Servicio: ${c.servicio}`, `📅 Fecha: ${formatFecha(c.fecha)}`, `💵 Precio: ${c.precio}`].join('\n'),
+    [
+      `👁️ Servicio: ${c.servicio}${c.adicional ? ` + ${c.adicional}` : ''}`,
+      `📅 Fecha: ${formatFecha(c.fecha)}`,
+      `💵 Precio: ${c.precio}`,
+    ].join('\n'),
   );
   return [
     `¡Hola, ${nombre}! 🤍`,

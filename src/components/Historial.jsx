@@ -172,7 +172,8 @@ export default function Historial({ archivo, onRestaurar }) {
                                             {formatHour(r.hora)} · {r.nombre}
                                           </p>
                                           <p className="text-sm text-accent">
-                                            {r.servicio} · {r.precio}
+                                            {r.servicio}
+                                            {r.adicional ? ` + ${r.adicional}` : ''} · {r.precio}
                                             {r.telefono && ` · ${r.telefono}`}
                                             {r.instagram && ` · ${r.instagram}`}
                                           </p>

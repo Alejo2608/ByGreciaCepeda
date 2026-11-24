@@ -32,6 +32,8 @@ export const categories = [
     pageTitle: 'Tipos de pestañas',
     pageDescription: 'Elige la técnica que mejor se adapte a tu mirada.',
     discount: true,
+    // Se puede sumar epilación con henna o con diseño sin cambiar el tiempo de la cita.
+    withAddon: true,
     groups: [{ title: 'Extensiones de pestañas', items: lashServices }],
   },
   {

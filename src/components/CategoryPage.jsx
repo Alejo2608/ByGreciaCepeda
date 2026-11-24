@@ -27,6 +27,7 @@ export default function CategoryPage({ category }) {
                   withDiscount={category.discount}
                   withForm={category.withForm}
                   allowSunday={category.allowSunday}
+                  withAddon={category.withAddon}
                   imageClass={category.imageClass}
                 />
               ))}

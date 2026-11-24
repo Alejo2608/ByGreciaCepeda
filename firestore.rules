@@ -41,7 +41,7 @@ service cloud.firestore {
       allow create: if isAdmin() || (
         request.resource.data.estado == 'pendiente'
         && request.resource.data.keys().hasOnly([
-          'servicio', 'precio', 'duracion', 'fecha', 'hora', 'nombre', 'telefono',
+          'servicio', 'adicional', 'precio', 'duracion', 'fecha', 'hora', 'nombre', 'telefono',
           'instagram', 'preferencias', 'datos', 'estado', 'slots', 'creado'
         ])
         && solicitudValida(request.resource.data)
