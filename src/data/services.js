@@ -140,11 +140,11 @@ export const browServices = [
   {
     id: 'brows-lamination',
     name: 'Brows lamination',
-    price: '20 USD',
+    price: '25 USD',
     duration: '1 hora',
     image: '/images/services/brows-lamination.jpg',
     description: 'Efecto más completo: incluye tratamiento X MaxyMova, epilación y tinte.',
-    message: 'Hola Grecia, me interesa el brows lamination (20 USD). ¿Me compartes disponibilidad?',
+    message: 'Hola Grecia, me interesa el brows lamination (25 USD). ¿Me compartes disponibilidad?',
   },
 ];
 export const microBrows = [
