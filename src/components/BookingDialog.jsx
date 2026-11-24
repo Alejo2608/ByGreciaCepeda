@@ -268,7 +268,7 @@ export default function BookingDialog({ open, onClose, service, preferences = fa
             <div className="mt-3 grid grid-cols-2 gap-3">
               {[
                 ['henna', 'Epilación con henna', '10 USD'],
-                ['diseno', 'Solo epilación con diseño', '6 USD'],
+                ['diseno', 'Epilación con diseño', '6 USD'],
               ].map(([id, nombre, precio]) => (
                 <label
                   key={id}
