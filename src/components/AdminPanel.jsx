@@ -33,7 +33,7 @@ import Historial from './Historial';
 import Deudoras from './Deudoras';
 import PorConfirmar from './PorConfirmar';
 import { activarNotificaciones, notificacionesDisponibles } from '../lib/notificaciones';
-import { enlaceWhatsAppClienta, mensajePagoPendiente, mensajeRecordatorio } from '../lib/recordatorio';
+import { abrirWhatsApp, enlaceWhatsAppClienta, mensajePagoPendiente, mensajeRecordatorio } from '../lib/recordatorio';
 import ConfirmDialog from './ConfirmDialog';
 import AdminModal from './AdminModal';
 import AgendarClienta from './AgendarClienta';
@@ -444,7 +444,7 @@ export default function AdminPanel() {
     const texto = mensajeRecordatorio(r);
     const enlace = enlaceWhatsAppClienta(r.telefono, texto);
     if (enlace) {
-      window.open(enlace, '_blank', 'noopener');
+      abrirWhatsApp(enlace);
     } else {
       setCopiado(false);
       setRecordatorioSinTelefono({ texto });
@@ -456,7 +456,7 @@ export default function AdminPanel() {
     const texto = mensajePagoPendiente(clienta.nombre, clienta.citas, clienta.total);
     const enlace = enlaceWhatsAppClienta(clienta.telefono, texto);
     if (enlace) {
-      window.open(enlace, '_blank', 'noopener');
+      abrirWhatsApp(enlace);
     } else {
       setCopiado(false);
       setRecordatorioSinTelefono({ texto });

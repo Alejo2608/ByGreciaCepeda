@@ -49,6 +49,17 @@ export function mensajePagoPendiente(nombre, citas, total) {
   ].join('\n');
 }
 
+// Abre WhatsApp. En la app instalada de iPhone (modo standalone) se usa la misma ventana: así iOS abre
+// la app de WhatsApp y al volver se carga de nuevo el panel. Con window.open se quedaba en blanco.
+export function abrirWhatsApp(enlace) {
+  const instalada = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  if (instalada) {
+    window.location.href = enlace;
+  } else {
+    window.open(enlace, '_blank', 'noopener');
+  }
+}
+
 // Enlace de WhatsApp directo a la clienta. Convierte un número venezolano (04XX…) al formato internacional (58…).
 export function enlaceWhatsAppClienta(telefono, texto) {
   let digitos = String(telefono || '').replace(/\D/g, '');
