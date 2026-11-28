@@ -85,3 +85,41 @@ body {
     animation: none;
   }
 }
+
+/* Portada en celular (fondo oscuro): el texto entra desde la izquierda y la foto con un leve desplazamiento. */
+@keyframes entrada-izquierda {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.movil-entrada {
+  animation: entrada-izquierda 0.9s ease-out both;
+}
+
+@keyframes foto-entrada {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.movil-foto {
+  animation: foto-entrada 1.4s ease-out 0.4s both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .movil-entrada,
+  .movil-foto {
+    animation: none;
+  }
+}
