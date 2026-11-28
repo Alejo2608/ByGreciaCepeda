@@ -5,7 +5,17 @@
 
 // Elige un día disponible dentro de las próximas 3 semanas. Se toma el segundo para no depender de hoy.
 async function elegirDia(dialog) {
-  await dialog.locator('div.grid.grid-cols-7.gap-1 button:not([disabled])').nth(1).click();
+  // Si el mes que se muestra ya no tiene días libres (por ejemplo, a fin de mes), pasa al siguiente mes.
+  const dias = dialog.locator('div.grid.grid-cols-7.gap-1 button:not([disabled])');
+  for (let intento = 0; intento < 3; intento++) {
+    try {
+      await dias.nth(1).waitFor({ timeout: 4000 });
+      break;
+    } catch {
+      await dialog.getByRole('button', { name: 'Mes siguiente' }).click();
+    }
+  }
+  await dias.nth(1).click();
 }
 
 async function llenarDatosBasicos(dialog) {
