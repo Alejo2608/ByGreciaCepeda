@@ -8,7 +8,7 @@ test('la portada carga sin errores de consola', async ({ page }) => {
   page.on('console', (msg) => msg.type() === 'error' && errors.push(msg.text()));
 
   await page.goto('/');
-  await expect(page.locator('h1').first()).toBeVisible();
+  await expect(page.locator('h1:visible').first()).toBeVisible();
   expect(errors).toEqual([]);
 });
 

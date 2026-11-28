@@ -53,7 +53,7 @@ test('con la política de contenido aplicada, la portada y el panel siguen funci
   });
 
   await page.goto('/');
-  await expect(page.locator('h1').first()).toBeVisible();
+  await expect(page.locator('h1:visible').first()).toBeVisible();
 
   await page.goto('/#admin');
   await expect(page.getByRole('button', { name: 'Entrar con Google' })).toBeVisible();
